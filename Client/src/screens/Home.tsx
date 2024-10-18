@@ -12,12 +12,14 @@ export default function Home() {
   const peices = ['♔', '♕', '♖', '♘'];
   
   useGSAP(()=>{
-    gsap.to(".logo",{
-      y:15,
+    gsap.to(".ani",{
+      y:-20,
+      duration:0.5,
+      delay:0.2,
+      stagger:0.5,
+      yoyo:true,
       repeat:-1,
-      duration:1,
-      yoyo: true,
-      ease: "power1.inOut"
+      ease:"power1.inOut"
     })
   });
   
@@ -32,27 +34,27 @@ export default function Home() {
   return (
     <section className="w-full min-h-screen flex flex-col items-center justify-center background relative overflow-hidden">
       <div className="text-white text-center mb-12 animate-fadeIn p-10 sm:p-20 relative">
-        <div className="absolute top-0 left-0">
+        <div className="ani absolute top-0 left-0">
           <span className="home-peice">
             {peices[0]}
           </span>
         </div>
-        <div className="absolute top-0 right-0">
+        <div className="ani absolute top-0 right-0">
           <span className="home-peice">
             {peices[1]}
           </span>
         </div>
-        <div className="absolute bottom-0 left-0">
+        <div className="ani absolute bottom-0 left-0">
           <span className="home-peice">
             {peices[2]}
           </span>
         </div>
-        <div className="absolute bottom-0 right-0">
+        <div className="ani absolute bottom-0 right-0">
           <span className="home-peice">
             {peices[3]}
           </span>
         </div>
-        <h1 className="logo text-6xl sm:text-9xl font-bold mb-2">Chess<span className="text-4xl sm:text-5xl font-light">.io</span></h1>
+        <h1 className="ani logo text-6xl sm:text-9xl font-bold mb-2">Chess<span className="text-4xl sm:text-5xl font-light">.io</span></h1>
         <p className="text-xl sm:text-2xl text-gray-300 mt-4">Experience the thrill of online chess</p>
       </div>
 
