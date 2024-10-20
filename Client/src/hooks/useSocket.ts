@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-const SOCKET_URL = "ws://localhost:8080";
+
 
 let ws:WebSocket|null = null;
 
@@ -8,7 +8,7 @@ export const useSocket = () => {
     const [socket,setSocket] = useState<WebSocket|null>(null);
     useEffect(()=>{
         if(!ws){
-            ws = new WebSocket(SOCKET_URL);
+            ws = new WebSocket(import.meta.env.VITE_SOCKET_URL);
             ws.onopen = () => {
                 setSocket(ws);
             }

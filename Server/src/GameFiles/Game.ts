@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
 import { Chess } from "chess.js";
-import { GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "./Messages";
+import { GAME_OVER, INIT_GAME, MOVE } from "./Messages";
+import { Worker } from "worker_threads";
 
 type Move = {
   from: string;
