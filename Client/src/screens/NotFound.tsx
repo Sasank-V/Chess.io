@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';

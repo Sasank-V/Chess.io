@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -22,7 +21,7 @@ export default function Home() {
     })
   });
   
-  const handleStart = () => {
+  const useHandleStart = () => {
     const socket = useSocket();
     socket?.send(JSON.stringify({
       type : INIT_GAME
@@ -57,7 +56,7 @@ export default function Home() {
         <p className="text-xl sm:text-2xl text-gray-300 mt-4">Experience the thrill of online chess</p>
       </div>
 
-      <Link to="/wait" onClick={handleStart}>
+      <Link to="/wait" onClick={useHandleStart}>
         <Button text={'Play Now'}/>
       </Link>
 

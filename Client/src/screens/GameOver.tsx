@@ -9,7 +9,7 @@ const GameOver = () => {
   const gameContext = useContext(GameContext);
   const isWinner = gameContext?.isWinner;
 
-  const handleRestart = () => {
+  const useHandleRestart = () => {
     const socket = useSocket();
     socket?.send(JSON.stringify({
       type : INIT_GAME
@@ -24,7 +24,7 @@ const GameOver = () => {
         </div>
         <div className="flex-center flex-col">
           <h2 className="text-5xl mb-10">{isWinner ? "You Won !!" : "You Lost !!"}</h2>
-          <Link to="/wait" onClick={handleRestart}>
+          <Link to="/wait" onClick={useHandleRestart}>
             <Button text={"Play Again"}/>
           </Link>
         </div>
