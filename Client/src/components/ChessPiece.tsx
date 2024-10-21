@@ -14,12 +14,18 @@ import whiteBishop from "../assets/White/Bishop.png";
 import whiteKing from "../assets/White/King.png";
 import whiteQueen from "../assets/White/Queen.png";
 
-function ChessPiece ({type,color,label}){
-    const [icon,setIcon] = useState(null);
+type Input = {
+    type:string,
+    color:string,
+    label:string, 
+};
+
+function ChessPiece (inp:Input){
+    const [icon,setIcon] = useState<string>("");
     useEffect(()=>{
-        setIcon(getIcon(type,color));
-    });
-    const getIcon = (type, color) => {
+        setIcon(getIcon(inp.type,inp.color));
+    },[inp]);
+    const getIcon = (type:string, color:string): string => {
         if (color === 'b') {
             switch (type) {
                 case 'k': return blackKing; // King
@@ -42,9 +48,9 @@ function ChessPiece ({type,color,label}){
             }
         }
     }
-    return(<div className={`w-[62.5px] h-[62.5px] bg-[${color}] flex justify-center items-center text-3xl`}    
+    return(<div className={`w-[62.5px] h-[62.5px] bg-[${inp.color}] flex justify-center items-center text-3xl`}    
     >
-        <img src={icon} alt="" data-square={label} />
+        <img src={icon?icon:""} alt="" data-square={inp.label} />
     </div>);
 }
 export default ChessPiece;

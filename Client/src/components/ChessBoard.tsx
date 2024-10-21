@@ -1,30 +1,34 @@
-import { Chess } from "chess.js";
+import { Chess, Move } from "chess.js"; // Include Move type from chess.js
 import { useContext, useEffect, useState, useRef } from "react";
 import ChessPiece from "./ChessPiece";
 import { GameContext } from "../context/context";
 import { useSocket } from "../hooks/useSocket";
-import { GAME_OVER, INIT_GAME, MOVE } from "./Messages";
-import Button from "./Button";
-import { Link, Navigate, redirect, Route, useNavigate } from "react-router-dom";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
+import { GAME_OVER, MOVE } from "./Messages";
+import { useNavigate } from "react-router-dom";
+
+type DraggedPiece = {
+  piece: { type: string; color: string }; // Type definition for the piece
+  square: string;
+};
 
 export default function ChessBoard() {
   const gameContext = useContext(GameContext);
+  if (!gameContext) throw new Error("Game context Not found");
+
   const { color, setIsWinner } = gameContext;
-  
+
   const chessRef = useRef(new Chess());
   const navigate = useNavigate();
   const socket = useSocket();
 
-  const draggedPieceRef = useRef(null);
+  const draggedPieceRef = useRef<HTMLDivElement | null>(null);
   const [board, setBoard] = useState(chessRef.current.board());
-  const [draggedPiece, setDraggedPiece] = useState(null);
+  const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
   const [gameOver, setGameOver] = useState(false);
   const [turn, setTurn] = useState("w");
   const [showPromotion, setShowPromotion] = useState(false);
-  const [promotionMove, setPromotionMove] = useState(null);
-  
+  const [promotionMove, setPromotionMove] = useState<Move | null>(null);
+
   const rowLabels = [8, 7, 6, 5, 4, 3, 2, 1];
   const colLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
@@ -33,18 +37,18 @@ export default function ChessBoard() {
     const handleMessage = (event: MessageEvent) => {
       const message = JSON.parse(event.data);
       switch (message.type) {
-        case MOVE:
-          console.log("Opponent's move:", message.payload);
+        case MOVE:{
           const result = chessRef.current.move(message.payload);
           if (result) {
             setBoard(chessRef.current.board());
             setTurn(chessRef.current.turn());
           }
           break;
+          }
         case GAME_OVER:
-          if (message.payload.winner == color) setIsWinner(true);
+          if (message.payload.winner === color) setIsWinner(true);
           setGameOver(true);
-          if (socket) socket.close();
+          socket.close();
           navigate("/gameover");
           break;
       }
@@ -52,43 +56,52 @@ export default function ChessBoard() {
     socket.onmessage = handleMessage;
   }, [socket, gameOver, turn]);
 
-  const handleDragStart = (e, piece, square) => {
+  const handleDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    piece: { type: string; color: string },
+    square: string
+  ) => {
     if (chessRef.current.turn() !== color || piece.color !== color) return;
     setDraggedPiece({ piece, square });
-    draggedPieceRef.current = e.target;
+    draggedPieceRef.current = e.target as HTMLDivElement;
   };
 
-  const handleDragEnd = (e) => {
+  const handleDragEnd = () => {
     setDraggedPiece(null);
     draggedPieceRef.current = null;
   };
 
-  const isPromotion = (from, to) => {
-    const piece = chessRef.current.get(from);
-    return piece && piece.type === 'p' && (to[1] === '8' || to[1] === '1');
-  };
-
-  const handleMove = (targetSquare) => {
-    if (chessRef.current.turn() !== color || !draggedPiece) {
-      console.log("Not Your Turn or No Piece Selected");
-      return;
-    }
-
-    const move = {
-      from: draggedPiece.square,
-      to: targetSquare,
-    };
-
-    if (isPromotion(move.from, move.to)) {
-      setPromotionMove(move);
-      setShowPromotion(true);
-    } else {
-      makeMove(move);
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const targetSquare = e.currentTarget.dataset.square;
+    if (targetSquare) {
+      handleMove(targetSquare);
     }
   };
 
-  const makeMove = (move) => {
-    try {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleMove = (targetSquare: string) => {
+    if (!draggedPiece) return;
+    const move = { from: draggedPiece.square, to: targetSquare };
+    const result = chessRef.current.move(move);
+    if (result) {
+      setBoard(chessRef.current.board());
+      setTurn(chessRef.current.turn());
+      socket?.send(
+        JSON.stringify({
+          type: MOVE,
+          move: move,
+        })
+      );
+    }
+  };
+
+  const handlePromotion = (pieceType: string) => {
+    if (promotionMove) {
+      const move = { ...promotionMove, promotion: pieceType };
       const result = chessRef.current.move(move);
       if (result) {
         setBoard(chessRef.current.board());
@@ -99,46 +112,11 @@ export default function ChessBoard() {
           })
         );
         setTurn(chessRef.current.turn());
-      } else {
-        console.log("Invalid move", move);
       }
-    } catch (error) {
-      console.log("Error making move:", error);
     }
-
-    setDraggedPiece(null);
+    setShowPromotion(false);
+    setPromotionMove(null);
   };
-
-  const handlePromotion = (pieceType) => {
-    if (promotionMove) {
-      const move = { ...promotionMove, promotion: pieceType };
-      makeMove(move);
-      setShowPromotion(false);
-      setPromotionMove(null);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const targetSquare = e.target.dataset.square;
-    if (targetSquare) {
-      handleMove(targetSquare);
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  useGSAP(() => {
-    gsap.to(".turn-text", {
-      opacity: 0.5,
-      duration: 1,
-      yoyo: true,
-      repeat: -1,
-      ease: "power1.inOut"
-    });
-  });
 
   return (
     <div className="w-full h-full flex-center flex-col gap-5">

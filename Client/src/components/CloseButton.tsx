@@ -1,5 +1,9 @@
 
-const CloseButton = ({text}) => {
+type Input = {
+   text : string,
+}
+
+const CloseButton = (inp:Input) => {
     return (
         <div className="relative">
           <div
@@ -9,7 +13,7 @@ const CloseButton = ({text}) => {
           <button
             className="relative px-12 py-4 text-3xl sm:text-4xl font-semibold text-white bg-red-400 rounded-full transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg"
           >
-            {text}
+            {inp.text}
           </button>
         </div>
       );
