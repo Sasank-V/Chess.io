@@ -8,6 +8,7 @@ import { PLAYER_RESIGN } from "../components/Messages";
 const Play = () => {
 
   const gameContext = useContext(GameContext);
+  if(!gameContext) throw new Error("Game context is Undefined");
   const setIsWinner = gameContext.setIsWinner;
   const socket = useSocket();
   const handleResign = () => {

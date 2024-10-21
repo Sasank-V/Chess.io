@@ -18,7 +18,7 @@ export default function WaitingPage() {
     throw new Error("WaitingPage must be used within a GameContextProvider");
   }
   
-  const { color, setColor } = gameContext;
+  const setColor = gameContext.setColor;
   const peices = ['♔', '♕', '♖', '♗', '♘', '♙'];
 
   useEffect(() => {
