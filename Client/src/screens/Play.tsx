@@ -9,13 +9,16 @@ const Play = () => {
 
   const gameContext = useContext(GameContext);
   if(!gameContext) throw new Error("Game context is Undefined");
-  const setIsWinner = gameContext.setIsWinner;
+  const {setIsWinner,setHasSocket,setReason} = gameContext
   const socket = useSocket();
   const handleResign = () => {
     if(!socket) return;
     socket.send(JSON.stringify({
       type:PLAYER_RESIGN
     }))
+    setReason("You Resigned");
+    setHasSocket(false);
+    socket.close();
     setIsWinner(false);
   }
 

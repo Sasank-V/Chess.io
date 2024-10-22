@@ -21,6 +21,7 @@ export default function WaitingPage() {
   const setColor = gameContext.setColor;
   const peices = ['♔', '♕', '♖', '♗', '♘', '♙'];
 
+
   useEffect(() => {
     if(!socket) return;
     socket?.send(JSON.stringify({

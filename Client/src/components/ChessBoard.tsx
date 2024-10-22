@@ -3,7 +3,7 @@ import { useContext, useEffect, useState, useRef } from "react";
 import ChessPiece from "./ChessPiece";
 import { GameContext } from "../context/context";
 import { useSocket } from "../hooks/useSocket";
-import { GAME_OVER, MOVE } from "./Messages";
+import { GAME_OVER, MOVE, PLAYER_RESIGN } from "./Messages";
 import { useNavigate } from "react-router-dom";
 
 type DraggedPiece = {
@@ -15,7 +15,7 @@ export default function ChessBoard() {
   const gameContext = useContext(GameContext);
   if (!gameContext) throw new Error("Game context Not found");
 
-  const { color, setIsWinner } = gameContext;
+  const { color, setIsWinner,setReason,setHasSocket} = gameContext;
 
   const chessRef = useRef(new Chess());
   const navigate = useNavigate();
@@ -28,6 +28,7 @@ export default function ChessBoard() {
   const [turn, setTurn] = useState("w");
   const [showPromotion, setShowPromotion] = useState(false);
   const [promotionMove, setPromotionMove] = useState<Move | null>(null);
+  const [invalidMove,setInValidMove] = useState<boolean>(false);
 
   const rowLabels = [8, 7, 6, 5, 4, 3, 2, 1];
   const colLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -48,13 +49,21 @@ export default function ChessBoard() {
         case GAME_OVER:
           if (message.payload.winner === color) setIsWinner(true);
           setGameOver(true);
-          socket.close();
+          setHasSocket(false);
+          setReason(message.payload.reason);
+          navigate("/gameover");
+          break;
+        case PLAYER_RESIGN:
+          setIsWinner(true);
+          setGameOver(true);
+          setHasSocket(false);
+          setReason(message.payload.reason);
           navigate("/gameover");
           break;
       }
     };
     socket.onmessage = handleMessage;
-  }, [socket, gameOver, turn]);
+  }, [socket, gameOver, turn,invalidMove]);
 
   const handleDragStart = (
     e: React.DragEvent<HTMLDivElement>,
@@ -86,16 +95,21 @@ export default function ChessBoard() {
   const handleMove = (targetSquare: string) => {
     if (!draggedPiece) return;
     const move = { from: draggedPiece.square, to: targetSquare };
-    const result = chessRef.current.move(move);
-    if (result) {
-      setBoard(chessRef.current.board());
-      setTurn(chessRef.current.turn());
-      socket?.send(
-        JSON.stringify({
-          type: MOVE,
-          move: move,
-        })
-      );
+    try{
+      const result = chessRef.current.move(move);
+      if (result) {
+        setBoard(chessRef.current.board());
+        setTurn(chessRef.current.turn());
+        socket?.send(
+          JSON.stringify({
+            type: MOVE,
+            move: move,
+          })
+        );
+      }
+    }catch{
+      setInValidMove(true);
+      setTimeout(()=>setInValidMove(false),1000);
     }
   };
 
@@ -137,6 +151,7 @@ export default function ChessBoard() {
             ))}
           </div>
 
+          {invalidMove && <div className="flex-center absolute z-10 text-white text-2xl h-full w-full bg-opacity-60  bg-black">Invalid Move</div>}
           <div
             className={`relative bg-white w-[500px] h-[500px] flex flex-wrap ${
               color === "b" ? "rotate-180" : ""

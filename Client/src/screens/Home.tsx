@@ -1,15 +1,18 @@
 'use client'
 
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { useSocket } from "../hooks/useSocket";
 import Button from "../components/Button";
-import { INIT_GAME } from "../components/Messages";
+import { useContext } from "react";
+import { GameContext } from "../context/context";
 
 export default function Home() {
+  const navigate = useNavigate();
+  const gamecontext = useContext(GameContext);
+  if(!gamecontext) throw new Error("Game Contex is Undefined in Home");
+  const {setHasSocket} = gamecontext;
   const peices = ['♔', '♕', '♖', '♘'];
-  
   useGSAP(()=>{
     gsap.to(".logo",{
       y:-25,
@@ -22,10 +25,8 @@ export default function Home() {
   });
   
   const useHandleStart = () => {
-    const socket = useSocket();
-    socket?.send(JSON.stringify({
-      type : INIT_GAME
-    }))
+    setHasSocket(true);
+    navigate("/wait");
   }
 
 
@@ -56,9 +57,9 @@ export default function Home() {
         <p className="text-xl sm:text-2xl text-gray-300 mt-4">Experience the thrill of online chess</p>
       </div>
 
-      <Link to="/wait" onClick={useHandleStart}>
+      <div onClick={useHandleStart}>
         <Button text={'Play Now'}/>
-      </Link>
+      </div>
 
       <div className="mt-16 text-gray-400 text-sm">
         <p>Join thousands of players worldwide</p>
