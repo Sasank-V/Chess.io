@@ -1,4 +1,4 @@
-import { WebSocket } from "ws";
+import { CLOSING, WebSocket } from "ws";
 import { GAME_OVER, INIT_GAME, MOVE, PLAYER_RESIGN } from "./Messages";
 import { Game } from "./Game";
 
@@ -19,6 +19,12 @@ export class GameManager{
     }
     removeUser(socket:WebSocket){
         this.users = this.users.filter((user)=> user!=socket);
+        const game = this.findGameBySocket(socket);
+        if(game) game.handlePlayerResign(socket);
+    }
+    findGameBySocket(socket:WebSocket): Game|undefined{
+        const game = this.games.find(game=> game.player1 === socket || game.player2 === socket);
+        return game;
     }
     private addHandler(socket:WebSocket){
         socket.on("message",(data)=>{
@@ -33,13 +39,13 @@ export class GameManager{
                 }
             }
             if(messsage.type === MOVE){
-                const game = this.games.find(game=> game.player1 === socket || game.player2 === socket);
+                const game = this.findGameBySocket(socket);
                 if(game){
                     game.makeMove(socket,messsage.move);
                 }
             }
             if(messsage.type == PLAYER_RESIGN){
-                const game = this.games.find(game=> game.player1 === socket || game.player2 === socket);
+                const game = this.findGameBySocket(socket);
                 if(game){
                     game.handlePlayerResign(socket);
                 }

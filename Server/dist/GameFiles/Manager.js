@@ -15,6 +15,13 @@ class GameManager {
     }
     removeUser(socket) {
         this.users = this.users.filter((user) => user != socket);
+        const game = this.findGameBySocket(socket);
+        if (game)
+            game.handlePlayerResign(socket);
+    }
+    findGameBySocket(socket) {
+        const game = this.games.find(game => game.player1 === socket || game.player2 === socket);
+        return game;
     }
     addHandler(socket) {
         socket.on("message", (data) => {
@@ -30,13 +37,17 @@ class GameManager {
                 }
             }
             if (messsage.type === Messages_1.MOVE) {
-                const game = this.games.find(game => game.player1 === socket || game.player2 === socket);
+                const game = this.findGameBySocket(socket);
+                if (socket == (game === null || game === void 0 ? void 0 : game.player1))
+                    console.log("Player1");
+                else
+                    console.log("Player2");
                 if (game) {
                     game.makeMove(socket, messsage.move);
                 }
             }
             if (messsage.type == Messages_1.PLAYER_RESIGN) {
-                const game = this.games.find(game => game.player1 === socket || game.player2 === socket);
+                const game = this.findGameBySocket(socket);
                 if (game) {
                     game.handlePlayerResign(socket);
                 }
