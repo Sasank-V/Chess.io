@@ -1,4 +1,4 @@
-import { Chess, Move } from "chess.js"; // Include Move type from chess.js
+import { Chess, Square } from "chess.js";
 import { useContext, useEffect, useState, useRef } from "react";
 import ChessPiece from "./ChessPiece";
 import { GameContext } from "../context/context";
@@ -6,56 +6,80 @@ import { useSocket } from "../hooks/useSocket";
 import { GAME_OVER, MOVE, PLAYER_RESIGN } from "./Messages";
 import { useNavigate } from "react-router-dom";
 
-type DraggedPiece = {
-  piece: { type: string; color: string }; // Type definition for the piece
-  square: string;
+type Move = {
+  from: string;
+  to: string;
+  promotion?: string;
 };
 
 export default function ChessBoard() {
   const gameContext = useContext(GameContext);
   if (!gameContext) throw new Error("Game context Not found");
 
-  const { color, setIsWinner,setReason,setHasSocket} = gameContext;
+  const { color, setIsWinner, setReason, setHasSocket } = gameContext;
 
   const chessRef = useRef(new Chess());
   const navigate = useNavigate();
   const socket = useSocket();
 
-  const draggedPieceRef = useRef<HTMLDivElement | null>(null);
   const [board, setBoard] = useState(chessRef.current.board());
-  const [draggedPiece, setDraggedPiece] = useState<DraggedPiece | null>(null);
-  const [gameOver, setGameOver] = useState(false);
+  const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [turn, setTurn] = useState("w");
   const [showPromotion, setShowPromotion] = useState(false);
   const [promotionMove, setPromotionMove] = useState<Move | null>(null);
-  const [invalidMove,setInValidMove] = useState<boolean>(false);
+  const [invalidMove, setInvalidMove] = useState<boolean>(false);
+
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const [boardWidth, setBoardWidth] = useState(500);
+  const [boardHeight, setBoardHeight] = useState(500);
 
   const rowLabels = [8, 7, 6, 5, 4, 3, 2, 1];
   const colLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (screenWidth > 600) {
+      setBoardWidth(500);
+      setBoardHeight(500);
+    } else {
+      const newWidth = Math.min(screenWidth * 0.9, 500);
+      setBoardWidth(newWidth);
+      setBoardHeight(newWidth);
+    }
+  }, [screenWidth]);
 
   useEffect(() => {
     if (!socket) return;
     const handleMessage = (event: MessageEvent) => {
       const message = JSON.parse(event.data);
       switch (message.type) {
-        case MOVE:{
+        case MOVE: {
           const result = chessRef.current.move(message.payload);
           if (result) {
             setBoard(chessRef.current.board());
             setTurn(chessRef.current.turn());
           }
           break;
-          }
+        }
         case GAME_OVER:
           if (message.payload.winner === color) setIsWinner(true);
-          setGameOver(true);
           setHasSocket(false);
           setReason(message.payload.reason);
           navigate("/gameover");
           break;
         case PLAYER_RESIGN:
           setIsWinner(true);
-          setGameOver(true);
           setHasSocket(false);
           setReason(message.payload.reason);
           navigate("/gameover");
@@ -63,39 +87,40 @@ export default function ChessBoard() {
       }
     };
     socket.onmessage = handleMessage;
-  }, [socket, gameOver, turn,invalidMove]);
+  }, [socket, turn, invalidMove, color, setIsWinner, setHasSocket, setReason, navigate]);
 
-  const handleDragStart = (
-    e: React.DragEvent<HTMLDivElement>,
-    piece: { type: string; color: string },
-    square: string
-  ) => {
-    if (chessRef.current.turn() !== color || piece.color !== color) return;
-    setDraggedPiece({ piece, square });
-    draggedPieceRef.current = e.target as HTMLDivElement;
+  const isPromotion = (from: Square, to: Square): boolean => {
+    const piece = chessRef.current.get(from);
+    return piece && piece.type === 'p' && (to[1] === '8' || to[1] === '1');
   };
 
-  const handleDragEnd = () => {
-    setDraggedPiece(null);
-    draggedPieceRef.current = null;
+  const showInvalid = () => {
+    setInvalidMove(true);
+    setTimeout(() => setInvalidMove(false), 1000);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const targetSquare = e.currentTarget.dataset.square;
-    if (targetSquare) {
-      handleMove(targetSquare);
+  const handleSquareClick = (square: string) => {
+    if (chessRef.current.turn() !== color) return;
+
+    if (selectedSquare === null) {
+      const piece = chessRef.current.get(square as Square);
+      if (piece && piece.color === color) {
+        setSelectedSquare(square);
+      }
+    } else {
+      handleMove(square);
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
   const handleMove = (targetSquare: string) => {
-    if (!draggedPiece) return;
-    const move = { from: draggedPiece.square, to: targetSquare };
-    try{
+    if (!selectedSquare) return;
+    const move = { from: selectedSquare, to: targetSquare };
+    if (isPromotion(move.from as Square, move.to as Square)) {
+      setPromotionMove(move as Move);
+      setShowPromotion(true);
+      return;
+    }
+    try {
       const result = chessRef.current.move(move);
       if (result) {
         setBoard(chessRef.current.board());
@@ -107,42 +132,50 @@ export default function ChessBoard() {
           })
         );
       }
-    }catch{
-      setInValidMove(true);
-      setTimeout(()=>setInValidMove(false),1000);
+    } catch {
+      showInvalid();
     }
+    setSelectedSquare(null);
   };
 
   const handlePromotion = (pieceType: string) => {
     if (promotionMove) {
       const move = { ...promotionMove, promotion: pieceType };
-      const result = chessRef.current.move(move);
-      if (result) {
-        setBoard(chessRef.current.board());
-        socket?.send(
-          JSON.stringify({
-            type: MOVE,
-            move: move,
-          })
-        );
-        setTurn(chessRef.current.turn());
+      try {
+        const result = chessRef.current.move(move);
+        if (result) {
+          setBoard(chessRef.current.board());
+          socket?.send(
+            JSON.stringify({
+              type: MOVE,
+              move: move,
+            })
+          );
+          setTurn(chessRef.current.turn());
+        }
+      } catch {
+        setShowPromotion(false);
+        showInvalid();
       }
     }
     setShowPromotion(false);
     setPromotionMove(null);
+    setSelectedSquare(null);
   };
 
+  const squareSize = boardWidth / 8;
+  const labelWidth = squareSize * 0.5;
+
   return (
-    <div className="w-full h-full flex-center flex-col gap-5">
-      <h2 className="text-white text-lg turn-text">
+    <div className="w-full h-full flex-center flex-col gap-1 md:gap-5 p-2">
+      <h2 className="text-white text-lg turn-text text-center">
         {turn === color ? "Your Turn" : "Wait for opponent to play"}
       </h2>
-      <div className="bg-white relative">
+      <div className="bg-white">
         <div className="flex">
-          <div
-            className={`flex flex-col justify-around items-center w-[35px] h-[500px] text-md font-semibold ${
-              color === "b" ? "rotate-180" : ""
-            }`}
+        <div
+            className={`flex flex-col justify-around items-center ${color == 'b' ? "rotate-180" : ""} text-xs sm:text-md`}
+            style={{ width: labelWidth, height: boardHeight }}
           >
             {rowLabels.map((label) => (
               <p key={label} className={`${color === "b" ? "rotate-180" : ""}`}>
@@ -151,43 +184,36 @@ export default function ChessBoard() {
             ))}
           </div>
 
-          {invalidMove && <div className="flex-center absolute z-10 text-white text-2xl h-full w-full bg-opacity-60  bg-black">Invalid Move</div>}
-          <div
-            className={`relative bg-white w-[500px] h-[500px] flex flex-wrap ${
-              color === "b" ? "rotate-180" : ""
-            }`}
+          {invalidMove && (
+            <div className="flex-center absolute z-10 text-white text-md md:text-2xl h-full w-full bg-opacity-60 bg-black">
+              Invalid Move
+            </div>
+          )}
+           <div
+            className={`relative bg-white flex flex-wrap ${color == 'b' ? "rotate-180" : ""}`}
+            style={{ width: boardWidth, height: boardHeight }}
           >
             {board.map((row, rowIdx) =>
               row.map((piece, colIdx) => {
-                const squareLabel =
-                  `${colLabels[colIdx]}${rowLabels[rowIdx]}`.toLowerCase();
+                const squareLabel = `${colLabels[colIdx]}${rowLabels[rowIdx]}`.toLowerCase();
                 return (
                   <div
                     key={squareLabel}
                     data-square={squareLabel}
                     className={`${
-                      (rowIdx + colIdx) % 2 === 0
-                        ? "bg-board-white"
-                        : "bg-board-black"
-                    } w-[62.5px] h-[62.5px] flex justify-center items-center ${
-                      color === "b" ? "rotate-180" : ""
+                      (rowIdx + colIdx) % 2 === 0 ? "bg-board-white" : "bg-board-black"
+                    } flex justify-center items-center ${color === "b" ? "rotate-180" : ""} ${
+                      selectedSquare === squareLabel ? "bg-active" : ""
                     }`}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
+                    style={{
+                      width: squareSize,
+                      height: squareSize,
+                    }}
+                    onClick={() => handleSquareClick(squareLabel)}
                   >
                     {piece && (
-                      <div
-                        draggable
-                        onDragStart={(e) =>
-                          handleDragStart(e, piece, squareLabel)
-                        }
-                        onDragEnd={handleDragEnd}
-                      >
-                        <ChessPiece
-                          color={piece.color}
-                          type={piece.type}
-                          label={squareLabel}
-                        />
+                      <div style={{ width: '100%', height: '100%' }}>
+                        <ChessPiece color={piece.color} type={piece.type} />
                       </div>
                     )}
                   </div>
@@ -196,15 +222,14 @@ export default function ChessBoard() {
             )}
           </div>
         </div>
-        <div className="flex justify-center">
-          <div className="h-[35px] w-[35px] bg-white left-0 bottom-0"></div>
+        <div className="flex justify-center text-xs sm:text-ms">
+          <div className="h-[20px] md:h-[35px]" style={{ width: labelWidth }} />
           <div
-            className={`flex w-full px-6 h-[35px] items-center justify-between text-md font-semibold ${
-              color === "b" ? "rotate-180" : ""
-            }`}
+            className={`flex w-full items-center justify-around ${color == 'b' ? "rotate-180" : "" }`}
+            style={{ height: labelWidth }}
           >
             {colLabels.map((label) => (
-              <p key={label} className={`${color === "b" ? "rotate-180" : ""}`}>
+              <p key={label} className={color == 'b' ? "rotate-180" : ""}>
                 {label}
               </p>
             ))}
@@ -212,7 +237,7 @@ export default function ChessBoard() {
         </div>
       </div>
       {showPromotion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg">
             <h3 className="text-lg font-bold mb-2">Choose promotion piece:</h3>
             <div className="flex gap-2">
@@ -222,7 +247,7 @@ export default function ChessBoard() {
                   className="w-16 h-16 bg-gray-200 hover:bg-gray-300 flex items-center justify-center rounded"
                   onClick={() => handlePromotion(pieceType)}
                 >
-                  <ChessPiece color={color} type={pieceType} label="" />
+                  <ChessPiece color={color} type={pieceType}/>
                 </button>
               ))}
             </div>

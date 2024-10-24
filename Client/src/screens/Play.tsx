@@ -23,7 +23,7 @@ const Play = () => {
   }
 
   return (
-    <section className="w-full h-[100vh] background flex-center flex-col gap-8">
+    <section className="w-full h-[100vh] background flex-center flex-col gap-3">
       <div>
         <ChessBoard/>
       </div>

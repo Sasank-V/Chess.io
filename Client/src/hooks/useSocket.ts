@@ -9,7 +9,6 @@ export const useSocket = () => {
     useEffect(()=>{
         if(!ws){
             ws = new WebSocket(import.meta.env.VITE_SOCKET_URL);
-            console.log("Socket created");
             ws.onopen = () => {
                 setSocket(ws);
             }
@@ -21,7 +20,6 @@ export const useSocket = () => {
         }
         return () => {
             if(socket?.readyState == 1){
-                console.log("I am closing");
                 socket.close();
             }
         }

@@ -17,7 +17,6 @@ import whiteQueen from "../assets/White/Queen.png";
 type Input = {
     type:string,
     color:string,
-    label:string, 
 };
 
 function ChessPiece (inp:Input){
@@ -48,9 +47,9 @@ function ChessPiece (inp:Input){
             }
         }
     }
-    return(<div className={`w-[62.5px] h-[62.5px] bg-[${inp.color}] flex justify-center items-center text-3xl`}    
+    return(<div className={`w-full h-full bg-[${inp.color}] flex justify-center items-center text-3xl`}    
     >
-        <img src={icon?icon:""} alt="" data-square={inp.label} />
+        <img src={icon?icon:""} alt=""/>
     </div>);
 }
 export default ChessPiece;
