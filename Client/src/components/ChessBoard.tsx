@@ -29,35 +29,35 @@ export default function ChessBoard() {
   const [promotionMove, setPromotionMove] = useState<Move | null>(null);
   const [invalidMove, setInvalidMove] = useState<boolean>(false);
 
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-  const [boardWidth, setBoardWidth] = useState(500);
-  const [boardHeight, setBoardHeight] = useState(500);
+  const [screenWidth,setScreenWidth] = useState(window.innerWidth);
+  const [boardWidth,setBoardWidth] = useState(500);
+  const [boardHeight,setBoardHeight] = useState(500);
+
 
   const rowLabels = [8, 7, 6, 5, 4, 3, 2, 1];
   const colLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-  useEffect(() => {
-    const handleResize = () => {
+  useEffect(()=>{
+    window.addEventListener("resize",()=>{
       setScreenWidth(window.innerWidth);
-    };
+    })
+    return ()=>{
+      window.removeEventListener("resize",()=>{
+        setScreenWidth(window.innerWidth);
+      })
+    }
+  },[screenWidth]);
 
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (screenWidth > 600) {
+  useEffect(()=>{
+    if(screenWidth > 600){
       setBoardWidth(500);
       setBoardHeight(500);
-    } else {
-      const newWidth = Math.min(screenWidth * 0.9, 500);
+    }else{
+      const newWidth = Math.min(500,screenWidth*0.9);
       setBoardWidth(newWidth);
       setBoardHeight(newWidth);
     }
-  }, [screenWidth]);
+  },[screenWidth])
 
   useEffect(() => {
     if (!socket) return;
@@ -107,7 +107,9 @@ export default function ChessBoard() {
       if (piece && piece.color === color) {
         setSelectedSquare(square);
       }
-    } else {
+    } else if(selectedSquare === square){
+      setSelectedSquare(null);
+    }else{
       handleMove(square);
     }
   };
@@ -163,19 +165,18 @@ export default function ChessBoard() {
     setSelectedSquare(null);
   };
 
-  const squareSize = boardWidth / 8;
-  const labelWidth = squareSize * 0.5;
-
   return (
-    <div className="w-full h-full flex-center flex-col gap-1 md:gap-5 p-2">
-      <h2 className="text-white text-lg turn-text text-center">
+    <div className="w-full h-full flex-center flex-col gap-5">
+      <h2 className="text-white text-lg turn-text">
         {turn === color ? "Your Turn" : "Wait for opponent to play"}
       </h2>
-      <div className="bg-white">
+      <div className="bg-white relative">
         <div className="flex">
-        <div
-            className={`flex flex-col justify-around items-center ${color == 'b' ? "rotate-180" : ""} text-xs sm:text-md`}
-            style={{ width: labelWidth, height: boardHeight }}
+          <div
+            className={`flex flex-col justify-around items-center  text-md font-semibold ${
+              color === "b" ? "rotate-180" : ""
+            }`}
+            style={{width:boardWidth/16 , height:boardHeight}}
           >
             {rowLabels.map((label) => (
               <p key={label} className={`${color === "b" ? "rotate-180" : ""}`}>
@@ -185,35 +186,35 @@ export default function ChessBoard() {
           </div>
 
           {invalidMove && (
-            <div className="flex-center absolute z-10 text-white text-md md:text-2xl h-full w-full bg-opacity-60 bg-black">
+            <div className="flex-center absolute z-10 text-white text-2xl h-full w-full bg-opacity-60 bg-black">
               Invalid Move
             </div>
           )}
-           <div
-            className={`relative bg-white flex flex-wrap ${color == 'b' ? "rotate-180" : ""}`}
-            style={{ width: boardWidth, height: boardHeight }}
+          <div
+            className={`relative bg-white  flex flex-wrap ${
+              color === "b" ? "rotate-180" : ""
+            }`}
+            style={{width:boardWidth , height:boardHeight}}
           >
             {board.map((row, rowIdx) =>
               row.map((piece, colIdx) => {
                 const squareLabel = `${colLabels[colIdx]}${rowLabels[rowIdx]}`.toLowerCase();
+                const cellColor = (rowIdx + colIdx) % 2 === 0 ? "bg-board-white" : "bg-board-black";
                 return (
                   <div
                     key={squareLabel}
                     data-square={squareLabel}
-                    className={`${
-                      (rowIdx + colIdx) % 2 === 0 ? "bg-board-white" : "bg-board-black"
-                    } flex justify-center items-center ${color === "b" ? "rotate-180" : ""} ${
-                      selectedSquare === squareLabel ? "bg-active" : ""
-                    }`}
-                    style={{
-                      width: squareSize,
-                      height: squareSize,
-                    }}
+                    className={`${cellColor} flex justify-center items-center ${
+                      color === "b" ? "rotate-180" : ""
+                    }  active:bg-active`}
                     onClick={() => handleSquareClick(squareLabel)}
-                  >
+                   style={{width:boardHeight/8,
+                    height:boardHeight/8,
+                  backgroundColor:selectedSquare === squareLabel ? "#7b61ff" : ""}}
+                   >
                     {piece && (
-                      <div style={{ width: '100%', height: '100%' }}>
-                        <ChessPiece color={piece.color} type={piece.type} />
+                      <div>
+                        <ChessPiece color={piece.color} type={piece.type}/>
                       </div>
                     )}
                   </div>
@@ -223,10 +224,10 @@ export default function ChessBoard() {
           </div>
         </div>
         <div className="flex justify-center text-xs sm:text-ms">
-          <div className="h-[20px] md:h-[35px]" style={{ width: labelWidth }} />
+          <div className="h-[20px] md:h-[35px]" style={{ width: boardHeight/16 }} />
           <div
             className={`flex w-full items-center justify-around ${color == 'b' ? "rotate-180" : "" }`}
-            style={{ height: labelWidth }}
+            style={{ height: boardHeight/16 }}
           >
             {colLabels.map((label) => (
               <p key={label} className={color == 'b' ? "rotate-180" : ""}>
@@ -237,7 +238,7 @@ export default function ChessBoard() {
         </div>
       </div>
       {showPromotion && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-4 rounded-lg">
             <h3 className="text-lg font-bold mb-2">Choose promotion piece:</h3>
             <div className="flex gap-2">
@@ -247,7 +248,7 @@ export default function ChessBoard() {
                   className="w-16 h-16 bg-gray-200 hover:bg-gray-300 flex items-center justify-center rounded"
                   onClick={() => handlePromotion(pieceType)}
                 >
-                  <ChessPiece color={color} type={pieceType}/>
+                  <ChessPiece color={color} type={pieceType} />
                 </button>
               ))}
             </div>
