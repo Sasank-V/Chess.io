@@ -137,10 +137,8 @@ export class Game {
     if (isValid) {
       // Send valid move to opponent
       this.sendValidMove(socket!, move);
-      // Check for game over after the move is made
       this.handleGameOver();
     } else {
-      // Handle invalid move case
       socket!.send(
         JSON.stringify({
           type: INVALID_MOVE,

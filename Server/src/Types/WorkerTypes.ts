@@ -10,23 +10,12 @@ export type WorkerMoveReply = {
     isValid:boolean
 }
 
-export type WorkerGameOverReply= {
-    type:string,
-    isGameOver:boolean,
-    winner:string,
-    reason:string,
-}
-
 export type ValidateMove = {
     move: Move,
     board:string
 }
 
-export type CheckGameOver = {
-    board:string
-}
-
 export type WorkerMessage = {
     type: string,
-    data: ValidateMove | CheckGameOver
+    data: ValidateMove
 }
