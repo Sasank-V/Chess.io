@@ -72,7 +72,8 @@ export default function WaitingPage() {
   }, [waiting]);
 
   return (
-    <div className="min-h-screen background flex flex-col items-center justify-center text-white">
+    <div className="min-h-screen flex-center flex-col background text-white ">
+
       <div className="relative w-64 h-64">
         {!waiting ? 
         <div className="text-[150px] flex-center horse">
@@ -81,10 +82,10 @@ export default function WaitingPage() {
         peices.map((piece, index) => (
           <div
             key={index}
-            className="chess-piece absolute text-6xl"
+            className="chess-piece absolute text-6xl "
             style={{
-              top: `${Math.sin(index / 3 * Math.PI) * 80 + 80}px`,
-              left: `${Math.cos(index / 3 * Math.PI) * 80 + 80}px`,
+              top: `${Math.sin(index / 3 * Math.PI) * 95 + 95}px`,
+              left: `${Math.cos(index / 3 * Math.PI) * 95 + 95}px`,
             }}
           >
             {piece}
@@ -92,7 +93,7 @@ export default function WaitingPage() {
         ))}
       </div>
       {waiting ? (
-        <h2 className="waiting-text mt-8 text-2xl font-bold">Please wait while we find your opponent</h2>
+        <h2 className="waiting-text mt-8 text-2xl font-bold w-full text-center">Please wait while we find your opponent</h2>
       ) : (
         <div className="text-center">
           <h2 className="found-text text-3xl font-bold mb-6">
