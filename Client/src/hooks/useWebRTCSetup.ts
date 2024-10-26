@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useContext } from "react";
 import { useSocket } from "./useSocket";
 import { WEB_STREAM } from '../components/Messages';
+import { GameContext } from "../context/context";
 
 export const useWebRTCSetup = () => {
     const socket = useSocket();
@@ -17,6 +18,11 @@ export const useWebRTCSetup = () => {
     const iceServers = {
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
     };
+
+    const gameContext = useContext(GameContext);
+  if (!gameContext) throw new Error("Game context Not found");
+
+  const {hasSocket} = gameContext;
 
     const createPeerConnection = useCallback(() => {
         if (!peerConnection.current) {
@@ -135,6 +141,39 @@ export const useWebRTCSetup = () => {
         }
     }, [isAudioEnabled]);
 
+    const disconnectPeer = useCallback(() => {
+        if (peerConnection.current) {
+            peerConnection.current.close();
+            peerConnection.current = null;
+        }
+
+        if (localStream.current) {
+            localStream.current.getTracks().forEach(track => track.stop());
+            localStream.current = null;
+        }
+
+        if (localVideoRef.current) {
+            localVideoRef.current.srcObject = null;
+        }
+
+        if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = null;
+        }
+
+        setIsConnected(false);
+        setIsVideoEnabled(true);
+        setIsAudioEnabled(true);
+
+        if (socket) {
+            socket.send(JSON.stringify({
+                type: WEB_STREAM,
+                data: {
+                    type: "disconnect"
+                }
+            }));
+        }
+    }, [socket]);
+
     useEffect(() => {
         if (socket) {
             socket.addEventListener('message', startConnection);
@@ -144,5 +183,22 @@ export const useWebRTCSetup = () => {
         }
     }, [socket, startConnection]);
 
-    return { startStream, localVideoRef, remoteVideoRef, isConnected, toggleVideo, toggleAudio, isVideoEnabled, isAudioEnabled };
+    useEffect(() => {
+        if(!hasSocket) disconnectPeer();
+        return () => {
+            disconnectPeer();
+        };
+    }, [disconnectPeer,hasSocket]);
+
+    return { 
+        startStream, 
+        localVideoRef, 
+        remoteVideoRef, 
+        isConnected, 
+        toggleVideo, 
+        toggleAudio, 
+        isVideoEnabled, 
+        isAudioEnabled,
+        disconnectPeer 
+    };
 };
