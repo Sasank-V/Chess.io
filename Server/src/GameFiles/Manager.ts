@@ -1,5 +1,5 @@
 import { CLOSING, WebSocket } from "ws";
-import { GAME_OVER, INIT_GAME, MOVE, PLAYER_RESIGN } from "./Messages";
+import { GAME_OVER, INIT_GAME,MOVE, PLAYER_RESIGN, WEB_STREAM } from "./Messages";
 import { Game } from "./Game";
 
 export class GameManager{
@@ -15,7 +15,6 @@ export class GameManager{
     addUser(socket:WebSocket){
         this.users.push(socket);
         this.addHandler(socket);
-
     }
     removeUser(socket:WebSocket){
         this.users = this.users.filter((user)=> user!=socket);
@@ -25,6 +24,15 @@ export class GameManager{
     findGameBySocket(socket:WebSocket): Game|undefined{
         const game = this.games.find(game=> game.player1 === socket || game.player2 === socket);
         return game;
+    }
+    handleStream(socket:WebSocket,message:any) {
+        const game = this.findGameBySocket(socket);
+        if(!game) return;
+        const oppnentPlayer = game?.player1 == socket ? game.player2 : game.player1;
+        oppnentPlayer.send(JSON.stringify({
+            type:WEB_STREAM,
+            data:message
+        }));
     }
     private addHandler(socket:WebSocket){
         socket.on("message",(data)=>{
@@ -49,6 +57,9 @@ export class GameManager{
                 if(game){
                     game.handlePlayerResign(socket);
                 }
+            }
+            if(messsage.type == WEB_STREAM){
+                this.handleStream(socket,messsage.data);
             }
         })
     }

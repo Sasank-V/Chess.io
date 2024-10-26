@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { GameContext } from "../context/context";
 import { useSocket } from "../hooks/useSocket";
 import { PLAYER_RESIGN } from "../components/Messages";
+import VideoStream from "../components/VideoStream.tsx";
 const Play = () => {
 
   const gameContext = useContext(GameContext);
@@ -23,8 +24,11 @@ const Play = () => {
   }
 
   return (
-    <section className="w-full h-[100vh] background flex-center flex-col gap-3">
-      <div>
+    <section className="w-full min-h-screen background flex-center flex-col lg:flex-row gap-5">
+      <div className="">
+        <VideoStream/>
+      </div>
+      <div className="z-10">
         <ChessBoard/>
       </div>
       <Link to="/gameover" onClick={handleResign}>
