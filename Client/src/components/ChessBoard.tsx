@@ -5,6 +5,7 @@ import { GameContext } from "../context/context";
 import { useSocket } from "../hooks/useSocket";
 import { GAME_OVER, MOVE, PLAYER_RESIGN,} from "./Messages";
 import { useNavigate } from "react-router-dom";
+import JoinedComp from "./JoinedComp";
 
 type Move = {
   from: string;
@@ -12,7 +13,13 @@ type Move = {
   promotion?: string;
 };
 
-export default function ChessBoard() {
+type Input = {
+  gameJoined : boolean,
+  setGameJoined : (val:boolean)=>void
+}
+
+export default function ChessBoard(inp:Input) {
+  const {gameJoined,setGameJoined} = inp;
   const gameContext = useContext(GameContext);
   if (!gameContext) throw new Error("Game context Not found");
 
@@ -34,8 +41,10 @@ export default function ChessBoard() {
   const [boardHeight,setBoardHeight] = useState(500);
 
 
+
   const rowLabels = [8, 7, 6, 5, 4, 3, 2, 1];
   const colLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
+  
 
   useEffect(()=>{
     window.addEventListener("resize",()=>{
@@ -165,7 +174,14 @@ export default function ChessBoard() {
     setSelectedSquare(null);
   };
 
+ 
+
+
   return (
+    !gameJoined ? 
+      <div className="w-[100vw] h-[100vh]">
+        <JoinedComp setGameJoined={setGameJoined}/>
+      </div> :  
     <div className="w-full h-full flex-center flex-col gap-5">
       <h2 className="text-white text-lg turn-text">
         {turn === color ? "Your Turn" : "Wait for opponent to play"}
