@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 
-import blackPawn from "../assets/Black/Pawn.png";
-import blackRook from "../assets/Black/Rook.png";
-import blackKinght from "../assets/Black/Knight.png";
-import blackBishop from "../assets/Black/Bishop.png";
-import blackKing from "../assets/Black/King.png";
-import blackQueen from "../assets/Black/Queen.png";
+import blackPawn from "../../assets/Black/Pawn.png";
+import blackRook from "../../assets/Black/Rook.png";
+import blackKinght from "../../assets/Black/Knight.png";
+import blackBishop from "../../assets/Black/Bishop.png";
+import blackKing from "../../assets/Black/King.png";
+import blackQueen from "../../assets/Black/Queen.png";
 
-import whitePawn from "../assets/White/Pawn.png";
-import whiteRook from "../assets/White/Rook.png";
-import whiteKinght from "../assets/White/Knight.png";
-import whiteBishop from "../assets/White/Bishop.png";
-import whiteKing from "../assets/White/King.png";
-import whiteQueen from "../assets/White/Queen.png";
+import whitePawn from "../../assets/White/Pawn.png";
+import whiteRook from "../../assets/White/Rook.png";
+import whiteKinght from "../../assets/White/Knight.png";
+import whiteBishop from "../../assets/White/Bishop.png";
+import whiteKing from "../../assets/White/King.png";
+import whiteQueen from "../../assets/White/Queen.png";
 
 type Input = {
     type:string,

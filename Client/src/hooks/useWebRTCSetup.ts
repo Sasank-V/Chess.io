@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect, useContext } from "react";
 import { useSocket } from "./useSocket";
-import { WEB_STREAM } from '../components/Messages';
+import { WEB_STREAM } from '../components/Common/Messages';
 import { GameContext } from "../context/context";
 
 export const useWebRTCSetup = () => {

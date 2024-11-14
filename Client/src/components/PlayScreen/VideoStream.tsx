@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useWebRTCSetup } from "../hooks/useWebRTCSetup"
+import { useWebRTCSetup } from "../../hooks/useWebRTCSetup"
 import { Video, VideoOff, Mic, MicOff } from "lucide-react"
 
 const VideoStream = () => {

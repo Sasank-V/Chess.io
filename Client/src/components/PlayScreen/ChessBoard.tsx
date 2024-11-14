@@ -1,11 +1,11 @@
 import { Chess, Square } from "chess.js";
 import { useContext, useEffect, useState, useRef } from "react";
 import ChessPiece from "./ChessPiece";
-import { GameContext } from "../context/context";
-import { useSocket } from "../hooks/useSocket";
-import { GAME_OVER, MOVE, PLAYER_RESIGN,} from "./Messages";
+import { GameContext } from "../../context/context";
+import { useSocket } from "../../hooks/useSocket";
+import { GAME_OVER, MOVE, PLAYER_RESIGN,} from "../Common/Messages";
 import { useNavigate } from "react-router-dom";
-import JoinedComp from "./JoinedComp";
+import JoinedComp from "./JoinedScreen";
 
 type Move = {
   from: string;

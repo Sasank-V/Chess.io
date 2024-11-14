@@ -8,8 +8,8 @@ import {
   VALIDATE_MOVE,
 } from "./Messages";
 import { Worker } from "worker_threads";
-import { Move, GameOverReply } from "../Types/GameTypes";
-import { WorkerMoveReply } from "../Types/WorkerTypes";
+import { Move, GameOverReply } from "./Types/GameTypes";
+import { WorkerMoveReply } from "./Types/WorkerTypes";
 import path from "path";
 
 export class Game {

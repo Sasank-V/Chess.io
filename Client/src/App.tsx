@@ -1,13 +1,15 @@
 import Home from './screens/Home.tsx'
-import Play from "./screens/Play.tsx";
+import Play from "./screens/PlayScreen.tsx";
 import WaitingPage from './screens/WaitingPage.tsx';
 import GameOver from "./screens/GameOver.tsx";
 import NotFound from './screens/NotFound.tsx';
-import PrivateRoute from './components/PrivateRoute.tsx';
+import PrivateRoute from './components/Common/PrivateRoute.tsx';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { GameContext } from './context/context.ts';
 import { useState } from 'react';
+import LoginPage from './screens/LoginPage.tsx';
+import SignUpPage from './screens/SignUpPage.tsx';
 
 const App = () => {
   const [color, setColor] = useState<string>("ToBeGiven");
@@ -21,6 +23,8 @@ const App = () => {
         <GameContext.Provider value={{ color, setColor, isWinner, setIsWinner, reason, setReason,hasSocket,setHasSocket}}>
           <Routes>
             <Route path='/' element={<Home />} />
+            <Route path="/login" element={<LoginPage/>}/>
+            <Route path="/signup" element={<SignUpPage/>}/>
             <Route path='/wait' element={
               <PrivateRoute>
                 <WaitingPage />

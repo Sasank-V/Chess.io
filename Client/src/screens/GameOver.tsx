@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 import { Link,useNavigate } from "react-router-dom";
 import { GameContext } from "../context/context";
-import Button from "../components/Button";
+import Button from "../components/Common/Button";
 const GameOver = () => {
 
   const gameContext = useContext(GameContext);

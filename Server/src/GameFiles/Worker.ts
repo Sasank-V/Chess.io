@@ -2,7 +2,7 @@ import {parentPort} from "worker_threads";
 import {Chess} from  "chess.js";
 import { VALIDATE_MOVE} from './Messages';
 
-import { WorkerMessage,ValidateMove,WorkerMoveReply } from "../Types/WorkerTypes";
+import { WorkerMessage,ValidateMove,WorkerMoveReply } from "./Types/WorkerTypes";
 
 parentPort?.on("message",(message:WorkerMessage) => {
     parentPort?.postMessage(handleValidateMove(message.data as ValidateMove))

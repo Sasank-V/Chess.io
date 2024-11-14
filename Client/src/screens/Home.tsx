@@ -3,7 +3,7 @@
 import { useNavigate } from "react-router-dom"
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import Button from "../components/Button";
+import Button from "../components/Common/Button";
 import { useContext } from "react";
 import { GameContext } from "../context/context";
 

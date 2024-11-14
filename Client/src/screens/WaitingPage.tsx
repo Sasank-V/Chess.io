@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useSocket } from "../hooks/useSocket";
 import { GameContext } from "../context/context";
-import { INIT_GAME } from "../components/Messages";
+import { INIT_GAME } from "../components/Common/Messages";
 
 
 export default function WaitingPage() {
