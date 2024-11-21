@@ -1,11 +1,11 @@
 import { Chess, Square } from "chess.js";
 import { useContext, useEffect, useState, useRef } from "react";
 import ChessPiece from "./ChessPiece";
-import { GameContext } from "../../context/context";
+import { GameContext } from "../../context/gameContext";
 import { useSocket } from "../../hooks/useSocket";
 import { GAME_OVER, MOVE, PLAYER_RESIGN,} from "../Common/Messages";
 import { useNavigate } from "react-router-dom";
-import JoinedComp from "./JoinedScreen";
+import JoinedScreen from "./JoinedScreen";
 
 type Move = {
   from: string;
@@ -180,7 +180,7 @@ export default function ChessBoard(inp:Input) {
   return (
     !gameJoined ? 
       <div className="w-[100vw] h-[100vh]">
-        <JoinedComp setGameJoined={setGameJoined}/>
+        <JoinedScreen setGameJoined={setGameJoined}/>
       </div> :  
     <div className="w-full h-full flex-center flex-col gap-5">
       <h2 className="text-white text-lg turn-text">

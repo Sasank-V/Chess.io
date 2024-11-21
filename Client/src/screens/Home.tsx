@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import Button from "../components/Common/Button";
 import { useContext } from "react";
-import { GameContext } from "../context/context";
+import { GameContext } from "../context/gameContext";
 
 export default function Home() {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import Button from '../Common/Button';
 
-const JoinedComp = ({setGameJoined} : {setGameJoined:(val:boolean)=>void}) => {
+const JoinedScreen = ({setGameJoined} : {setGameJoined:(val:boolean)=>void}) => {
     const peices = ['♔', '♕', '♖', '♗', '♘', '♙'];
     useGSAP(() => {
         // Animate when opponent is found
@@ -41,4 +41,4 @@ const JoinedComp = ({setGameJoined} : {setGameJoined:(val:boolean)=>void}) => {
   )
 }
 
-export default JoinedComp
+export default JoinedScreen;

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useSocket } from "../hooks/useSocket";
-import { GameContext } from "../context/context";
+import { GameContext } from "../context/gameContext";
 import { INIT_GAME } from "../components/Common/Messages";
 
 

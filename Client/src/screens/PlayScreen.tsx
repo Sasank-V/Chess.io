@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import ChessBoard from "../components/PlayScreen/ChessBoard.tsx";
 import CloseButton from "../components/PlayScreen/CloseButton.tsx";
 import { useContext, useState } from "react";
-import { GameContext } from "../context/context.ts";
+import { GameContext } from "../context/gameContext.ts";
 import { useSocket } from "../hooks/useSocket.ts";
 import { PLAYER_RESIGN } from "../components/Common/Messages.tsx";
 import VideoStream from "../components/PlayScreen/VideoStream.tsx";
