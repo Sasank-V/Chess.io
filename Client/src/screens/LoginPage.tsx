@@ -4,22 +4,15 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { axiosC } from "../AxiosConfig";
+import {SHA256} from "crypto-js"
+import { LoginResponse } from "../types/auth";
 
-const apiBaseUrl = import.meta.env.VITE_API_URL;
-type LoginResponse = {
-  success: boolean;
-  message: string;
-  data: {
-    accessToken: string;
-    username: string;
-    expiresAt: number;
-  };
-};
+
 
 const LoginPage = () => {
   const [namemail, setNamemail] = useState<string>("");
   const [pass, setPass] = useState<string>("");
-  const [error, setError] = useState<string>("");
   const navigate = useNavigate();
 
   const passRef = useRef<HTMLInputElement | null>(null);
@@ -36,32 +29,28 @@ const LoginPage = () => {
   };
 
   const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
     try {
-      e.preventDefault();
-      const rep = await fetch(`${apiBaseUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: namemail,
-          password: pass,
-          email: namemail,
-        }),
+      const hashedPass = SHA256(pass).toString();
+      const response = await axiosC.post<LoginResponse>("/auth/login", {
+        username: namemail.toLocaleLowerCase(),
+        password: hashedPass,
+        email: namemail,
       });
-      const res: LoginResponse = await rep.json();
+
+      const res = response.data;
+
       if (res.success) {
-        setUsername(res.data.username);
-        setAccessToken(res.data.accessToken);
-        setExpiry(res.data.expiresAt);
-        setError("");
-        toast.success("Login Successfull")
+        setUsername(res.data!.username);
+        setAccessToken(res.data!.accessToken);
+        setExpiry(res.data!.expiresAt);
+        toast.success("Login Successful");
         navigate("/");
       } else {
-        setError(res.message);
+        toast.error(res.message);
       }
     } catch (err) {
-      console.log("Error while login: ", err);
+      console.log("Error in login: " ,err);
     }
   };
 
@@ -121,9 +110,6 @@ const LoginPage = () => {
               <input type="checkbox" onChange={toggleShowPass} />
               <label htmlFor="">Show Password</label>
             </div>
-            {error && (
-              <div className="text-red-400 text-md text-center">{error}</div>
-            )}
           </div>
           <div className="flex w-[75%] justify-between sub-text">
             <div>

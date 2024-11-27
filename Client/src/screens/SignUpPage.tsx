@@ -2,23 +2,16 @@ import { FormEvent, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { axiosC } from "../AxiosConfig";
+import { SHA256 } from "crypto-js";
+import { SignUpResponse } from "../types/auth";
 
-const apiBaseUrl = import.meta.env.VITE_API_URL;
-type SignUpResponse = {
-    success:boolean,
-    message:string,
-    data:{
-        accessToken:string,
-        username:string,
-        expiresAt:number
-    }
-};
 
 const SignUpPage = () => {
     const [name,setName] = useState<string>("");
     const [email,setEmail] = useState<string>("");
     const [pass,setPass] = useState<string>("");
-    const [error,setError] = useState<string>("");
 
     const passRef1 = useRef<HTMLInputElement | null>(null);
     const passRef2 = useRef<HTMLInputElement | null>(null);
@@ -37,29 +30,26 @@ const SignUpPage = () => {
     const handleSignUp = async (e:FormEvent) => {
         e.preventDefault(); 
         if(passRef2.current?.value != pass){
-            setError("Passwords Not Matching");
+            toast.error("Passwords Not Matching");
             return;
         }
         try{
-          const rep = await fetch(`${apiBaseUrl}/auth/signup`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username: name,
-              password: pass,
-              email: email,
-            }),
-          });
-          const res:SignUpResponse = await rep.json();
+          const hashedPass = SHA256(pass).toString();
+          const response = await axiosC.post<SignUpResponse>("/auth/signup",{
+            username: name.toLocaleLowerCase(),
+            password: hashedPass,
+            email: email.toLocaleLowerCase(),
+          }); 
+          const res = response.data;
           if(!res.success){
-            setError(res.message);
+            toast.error(res.message);
             return;
           }
+          toast.success("Signup Successfull");
           navigate("/login");
         }catch(error){
           console.log("Error in SignUp: ", error);
+          toast.error("Internal Server Error");
         }
     }
     
@@ -104,7 +94,6 @@ const SignUpPage = () => {
                     <input type="checkbox" onChange={toggleShowPass}/>
                     <label htmlFor="">Show Password</label>
                     </div>
-                {error && <div className="text-red-400 text-md text-center">{error}</div>}
                 </div>
                 <div className="flex-center w-[75%] justify-between sub-text">
                     <div >
