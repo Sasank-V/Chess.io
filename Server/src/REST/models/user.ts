@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Date, Document, Schema } from "mongoose";
 import { IGame } from "./game";
 
 export interface IUser extends Document {
@@ -9,6 +9,8 @@ export interface IUser extends Document {
     games:mongoose.Types.ObjectId[] | IGame[],
     rating:number,
     refreshToken:string,
+    OTP:string,
+    OTPExpiry:Date
 };
 
 const userSchema = new mongoose.Schema({
@@ -24,6 +26,10 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
+    picture : {
+        type:String,
+        default:"https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?semt=ais_hybrid"
+    },
     friends : [{
         type:Schema.Types.ObjectId,
         ref : "User"
@@ -37,6 +43,10 @@ const userSchema = new mongoose.Schema({
         default : 500
     },
     refreshToken : {
+        type:String,
+        default:""
+    },
+    OTP : {
         type:String,
         default:""
     }

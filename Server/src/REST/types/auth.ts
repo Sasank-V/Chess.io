@@ -18,3 +18,26 @@ export interface LoginResponse{
         expiresAt?:Number,
     }
 }
+
+export interface OTPRequestBody {
+    namemail:string
+}
+
+export interface OTPResponse {
+    success:boolean,
+    message:string,
+    data?:{
+        email?:string,
+        otp?:string
+    }
+}
+
+export interface UpdatePassRequestBody {
+    email:string,
+    password:string, 
+}
+
+export interface ValidateOTPRequestBody {
+    email:string,
+    otp:string,
+}

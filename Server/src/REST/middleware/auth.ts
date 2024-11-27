@@ -16,6 +16,7 @@ export const verifyJWT = async (req: AuthRequest, res: Response, next: NextFunct
             return;
         }
         const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+        console.log("JWT Decoded: ",decoded);
         req.body.jwt = decoded;
         next();
     } catch (err) {

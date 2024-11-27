@@ -1,7 +1,9 @@
 import { CookieOptions, RequestHandler } from "express";
 import User, { IUser } from "../models/user";
-import { AuthResponse,LoginResponse, AuthRequestBody } from "../types/auth";
+import { AuthResponse, LoginResponse, AuthRequestBody, OTPRequestBody, OTPResponse, UpdatePassRequestBody, ValidateOTPRequestBody } from '../types/auth';
 import jwt, { JsonWebTokenError, Secret } from 'jsonwebtoken';
+import { getOTPMailOptions, getWelcomeMailOptions, sendMail} from "../utils/mailConfig";
+import { SHA256 } from 'crypto-js';
 
 // Request Format
 // {username: "", password: "", email: ""}
@@ -22,6 +24,8 @@ export const signupHandler: RequestHandler<{}, AuthResponse, AuthRequestBody> = 
             email
         });
         await newUser.save();
+        const welcomMailOptions = getWelcomeMailOptions(newUser.username,newUser.email);
+        sendMail(welcomMailOptions);
         res.status(200).json({
             success: true,
             message: "User registered successfully"
@@ -61,6 +65,7 @@ export const loginHandler:RequestHandler<{},LoginResponse,AuthRequestBody> = asy
                 success:false,
                 message:"Incorrect Password"
             });
+            return;
         }
         const payload = {
             "username" : user.username,
@@ -180,4 +185,113 @@ export const refreshHandler: RequestHandler<{},LoginResponse> = async (req,res) 
             message:"Internal Server Error while Refreshing JWT"
         })
     }
+}
+
+export const sendOTPHandler: RequestHandler<{},OTPResponse,OTPRequestBody> = async (req,res) => {
+    try {
+        const {namemail} = req.body;
+        const user = await User.findOne({$or:[{username:namemail},{email:namemail}]});
+        if(!user){
+            res.status(404).json({
+                success:false,
+                message:"User not found"
+            });
+            return;
+        }
+        const otp:string = (Math.ceil(Math.random()*1000000) + 1) + "";
+        const hashedOTP = SHA256(otp).toString();
+        user.OTP = hashedOTP;
+        await user.save();
+        
+        const OTPMailOptions = getOTPMailOptions(otp,user.email);
+        sendMail(OTPMailOptions);
+        
+        res.status(200).json({
+            success:true,
+            message:"OTP Sent to the mail successfully",
+            data:{
+                email:user.email,
+            }
+        });
+
+    } catch (error) {
+        console.log("Error while sending OTP:",error);
+        res.status(500).json({
+            success:false,
+            message:"Internal Server Error while sending OTP"
+        });
+    }
+}
+
+export const validateOTPHandler: RequestHandler<{},AuthResponse,ValidateOTPRequestBody> = async (req,res)=>{
+    try {
+        const {email,otp} = req.body;
+        const user = await User.findOne({email:email});
+        if(!user){
+            res.status(404).json({
+                success:false,
+                message:"User not found :(" 
+             });
+             return;
+        }
+        const hashedOTP = SHA256(otp).toString();
+        if(hashedOTP !== user.OTP){
+            res.status(400).json({
+                success:false,
+                message:"Incorrect OTP"
+            });
+            return;
+        }
+
+        user.OTP = "";
+        await user.save();
+
+        res.status(200).json({
+            success:true,
+            message:"OTP Validated successfully"
+        })
+
+    } catch (error) {
+        console.log("Error while validating OTP: ", error);
+        res.status(500).json({
+            success:false,
+            message:"Internal server error while validating OTP"
+        })
+    }
+}
+
+export const updatePassHandler: RequestHandler<{},AuthResponse,UpdatePassRequestBody> = async (req,res) => {
+    try {
+        const {email,password} = req.body;
+        const user = await User.findOne({email:email});
+        if(!user){
+            res.status(404).json({
+               success:false,
+               message:"User not found :(" 
+            });
+            return;
+        }
+
+        if(user.OTP){
+            res.status(400).send({
+                success:false,
+                message:"OTP isn't validated yet"
+            })
+        }
+
+        user.password = password;
+        await user.save();
+
+        res.status(200).json({
+            success:true,
+            message:"Password Updated successfully"
+        })
+
+    } catch (error) {
+        console.log("Internal Error while updating password: ", error);
+        res.status(500).json({
+            success:false,
+            message:"Internal Server Error while updating passwords"
+        })
+    }   
 }

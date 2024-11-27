@@ -5,19 +5,23 @@
     "@types/cors": "^2.8.17",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/mongodb": "^4.0.7",
+    "@types/nodemailer": "^6.4.17",
     "@types/ws": "^8.5.12",
     "bcryptjs": "^2.4.3",
     "chess.js": "^1.0.0-beta.8",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.10.0",
     "mongoose": "^8.8.1",
+    "nodemailer": "^6.9.16",
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/express": "^5.0.0"
   }
 }
