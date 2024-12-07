@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useWebRTCSetup } from "../../hooks/useWebRTCSetup"
 import { Video, VideoOff, Mic, MicOff } from "lucide-react"
+import { UserContext } from '../../context/userContext';
 
-const VideoStream = () => {
+const VideoStream = ({oppName}:{oppName:string}) => {
   const {
     startStream,
     localVideoRef,
@@ -14,6 +15,9 @@ const VideoStream = () => {
     remoteVideoRef
   } = useWebRTCSetup();
   const [width,setWidth] = useState(window.innerWidth);
+  const userContext = useContext(UserContext);
+  if(!userContext) throw new Error("Usercontext unreachable in videostream.tsx");
+  const {username} = userContext;
   useEffect(()=>{
     window.addEventListener("resize",()=>{
       setWidth(window.innerWidth);
@@ -22,6 +26,7 @@ const VideoStream = () => {
       setWidth(window.innerWidth);
     })
   })
+
 
 
   return (
@@ -44,12 +49,12 @@ const VideoStream = () => {
           </div>
           <div className="relative bg-gray-200 rounded-lg overflow-hidden" style={{width:width > 800 ? Math.min(250,width/5) : Math.max(width/4,100) ,height:width > 800 ? Math.min(250,width/5) : Math.max(width/4,100)}}>
             <video ref={localVideoRef} playsInline autoPlay muted className="absolute inset-0 w-full h-full object-cover"></video>
-            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">Me</div>
+            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">{username}</div>
           </div>
         </div>
         <div className="relative bg-gray-200 rounded-lg overflow-hidden " style={{width:width > 800 ? Math.min(250,width/5) : Math.max(width/4,100) ,height:width > 800 ? Math.min(250,width/5) : Math.max(width/4,100)}}>
             <video ref={remoteVideoRef} playsInline autoPlay className="absolute inset-0 w-full h-full object-cover"></video>
-            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">Opp</div>
+            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">{oppName}</div>
       </div>
     </div>
   )

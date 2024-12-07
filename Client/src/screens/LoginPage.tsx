@@ -5,10 +5,9 @@ import gsap from "gsap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { axiosC } from "../AxiosConfig";
-import {SHA256} from "crypto-js"
+import { SHA256 } from "crypto-js";
 import { LoginResponse } from "../types/auth";
-
-
+import Cookies from "js-cookie";
 
 const LoginPage = () => {
   const [namemail, setNamemail] = useState<string>("");
@@ -20,7 +19,8 @@ const LoginPage = () => {
 
   const userContext = useContext(UserContext);
   if (!userContext) throw Error("User Context Not accessible in login");
-  const { setUsername, setAccessToken, setExpiry } = userContext;
+  const { setUsername, setAccessToken, setExpiry, setIsLoggedIn, setPhoto } =
+    userContext;
 
   const toggleShowPass = () => {
     if (!passRef.current) return;
@@ -44,13 +44,34 @@ const LoginPage = () => {
         setUsername(res.data!.username);
         setAccessToken(res.data!.accessToken);
         setExpiry(res.data!.expiresAt);
+        setIsLoggedIn(true);
+        setPhoto(res.data.photo);
+
+        //Set Cookies
+        Cookies.set("username", res.data!.username, {
+          expires: new Date(res.data!.expiresAt),
+          path:"/"
+        });
+        Cookies.set("accessToken", res.data!.accessToken, {
+          expires: new Date(res.data!.expiresAt),
+          path:"/"
+        });
+        Cookies.set("expiry", res.data!.expiresAt+"", {
+          expires: new Date(res.data!.expiresAt),
+          path:"/"
+        });
+        Cookies.set("photo", res.data!.photo, {
+          expires: 1,
+          path: "/",
+        });
+
         toast.success("Login Successful");
         navigate("/");
       } else {
         toast.error(res.message);
       }
     } catch (err) {
-      console.log("Error in login: " ,err);
+      console.log("Error in login: ", err);
     }
   };
 
@@ -68,7 +89,7 @@ const LoginPage = () => {
 
   return (
     <section className="absolute w-full h-full background text-white flex-center p-5">
-      <div className="bg-slate-200 text-black h-full w-full sm:w-[90vw] sm:h-[90vh]  md:p-[5vw] rounded-[70px] flex overflow-y-hidden">
+      <div className="bg-slate-200 text-black h-[80vh] w-full sm:w-[90vw] sm:h-[90vh]  md:p-[5vw] rounded-[70px] flex overflow-y-hidden">
         <div className="hidden md:w-[50%] md:flex h-full border-r-2 border-black">
           <img src="/logo.svg" alt="" className="" ref={logoRef} />
         </div>
@@ -111,15 +132,23 @@ const LoginPage = () => {
               <label htmlFor="">Show Password</label>
             </div>
           </div>
-          <div className="flex w-[75%] justify-between sub-text">
-            <div>
-              Don't have an account? &nbsp;
-              <a href="/signup" className="text-blue-700">
+          <div className="flex w-[75%] justify-between sub-text gap-2">
+            <div className="">
+              Don't have an account?&nbsp;
+              <span
+                onClick={() => navigate("/signup")}
+                className="text-blue-700 cursor-pointer"
+              >
                 Signup
-              </a>
+              </span>
             </div>
             <div>
-              <a href="/forgot">Forgot password ?</a>
+              <div
+                onClick={() => navigate("/forgot")}
+                className="cursor-pointer"
+              >
+                Forgot password ?
+              </div>
             </div>
           </div>
           <div className="relative w-full flex-center my-2">

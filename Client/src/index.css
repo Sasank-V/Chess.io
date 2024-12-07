@@ -36,10 +36,15 @@
   @apply text-[60px] md:text-[70px]
 }
 
+.sub-title-text{
+  @apply text-[18px] md:text-[20px]  
+}
+
 .sub-text{
  @apply text-[14px] sm:text-[15px] 
 }
 
-/* .content-text{
+.content-text{
+  @apply text-[10px] sm:text-[12px]
+}
 
-} */

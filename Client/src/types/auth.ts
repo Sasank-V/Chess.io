@@ -5,6 +5,7 @@ export type LoginResponse = {
       accessToken: string;
       username: string;
       expiresAt: number;
+      photo:string;
     };
 };
 

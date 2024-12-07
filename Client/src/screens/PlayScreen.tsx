@@ -10,7 +10,7 @@ const Play = () => {
 
   const gameContext = useContext(GameContext);
   if(!gameContext) throw new Error("Game context is Undefined");
-  const {setIsWinner,setHasSocket,setReason} = gameContext
+  const {setIsWinner,setHasSocket,setReason,oppName} = gameContext
   const socket = useSocket();
 
   const [gameJoined,setGameJoined] = useState<boolean>(false);
@@ -21,17 +21,18 @@ const Play = () => {
       type:PLAYER_RESIGN
     }))
     setReason("You Resigned");
-    setHasSocket(false);
     socket.close();
+    setHasSocket(false);
     setIsWinner(false);
   }
 
   return (
     <section className="w-full min-h-screen background flex-center flex-col lg:flex-row gap-5">
       <div className={`${!gameJoined?"hidden":"flex"}`}>
-        <VideoStream/>
+        <VideoStream oppName={oppName}/>
       </div>
-      <div className="z-10">
+      <div className="z-0
+      ">
         <ChessBoard gameJoined={gameJoined} setGameJoined={setGameJoined}/>
       </div> 
       <Link to="/gameover" onClick={handleResign} className={`${!gameJoined?"hidden":"flex"}`}>

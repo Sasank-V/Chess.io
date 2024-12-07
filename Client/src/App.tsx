@@ -15,17 +15,47 @@ import { UserContext } from "./context/userContext.ts";
 import { ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { refresh } from "./hooks/useRefresh.ts";
+import NavBar from "./components/Common/NavBar.tsx";
+import Cookies from "js-cookie";
 
 const App = () => {
   const [color, setColor] = useState<string>("ToBeGiven");
   const [isWinner, setIsWinner] = useState<boolean>(false);
-  const [reason, setReason] = useState("ToBeSet");
+  const [reason, setReason] = useState<string>("");
   const [hasSocket, setHasSocket] = useState(false);
+  const [oppName,setOppName] = useState<string>("");
 
   const [username, setUsername] = useState<string>("");
   const [accessToken, setAccessToken] = useState<string>("");
   const [expiry, setExpiry] = useState<number>(0);
+  const [isLoggedIn,setIsLoggedIn] = useState<boolean>(false);
+  const [photo,setPhoto] = useState<string>("");
 
+  useEffect(() => {
+    // Check cookies when app loads
+    const savedUsername = Cookies.get('username');
+    const savedToken = Cookies.get('accessToken');
+    const savedExpiry = Cookies.get('expiry');
+    const savedPhoto = Cookies.get("photo");
+
+    if (savedUsername && savedToken && savedExpiry && savedPhoto) {
+      const expiryTime = parseInt(savedExpiry);
+      const currentTime = new Date().getTime();
+      if (expiryTime > currentTime) {
+        setUsername(savedUsername);
+        setAccessToken(savedToken);
+        setExpiry(parseInt(savedExpiry));
+        setPhoto(savedPhoto);
+        setIsLoggedIn(true);
+        // console.log("Got it");
+      } else {
+        // Clear expired cookies
+        Cookies.remove('username');
+        Cookies.remove('accessToken');
+        Cookies.remove('expiry');
+      }
+    }
+  }, []);
 
 
   useEffect(()=>{
@@ -61,6 +91,10 @@ const App = () => {
             setAccessToken,
             expiry,
             setExpiry,
+            isLoggedIn,
+            setIsLoggedIn,
+            photo,
+            setPhoto
           }}
         >
           <GameContext.Provider
@@ -73,8 +107,13 @@ const App = () => {
               setReason,
               hasSocket,
               setHasSocket,
+              oppName,
+              setOppName
             }}
           >
+            <section className="z-50 w-full">
+              <NavBar/> 
+            </section>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
@@ -82,11 +121,7 @@ const App = () => {
               <Route path="/forgot" element={<ForgotPassPage />} />
               <Route
                 path="/wait"
-                element={
-                  <PrivateRoute>
-                    <WaitingPage />
-                  </PrivateRoute>
-                }
+                element={<WaitingPage />}
               />
               <Route
                 path="/play"
