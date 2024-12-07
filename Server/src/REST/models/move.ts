@@ -1,9 +1,9 @@
-import mongoose, { Document } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 
 export interface IMove extends Document{
     from:string,
     to:string,
-    fen:string,
+    promotion:string,
 }
 
 const moveSchema = new mongoose.Schema({
@@ -15,9 +15,9 @@ const moveSchema = new mongoose.Schema({
         type: String,
         required : true,
     },
-    fen : {
+    promotion : {
         type:String,
-        required : true
+        default:"",
     }
 });
 

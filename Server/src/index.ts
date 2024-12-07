@@ -31,8 +31,11 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from 'cookie-parser';
 import { connectToDB } from './database';
+
 import {default as authRouter} from './REST/routes/auth';
-import path from 'path';
+import {default as userRouter} from "./REST/routes/user";
+import {default as gameRouter} from "./REST/routes/game";
+import { verifyJWT } from './REST/middleware/auth';
 
 
 const app = express();
@@ -56,11 +59,20 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
 app.use("/api/auth",authRouter);
+app.use("/api/user",userRouter);
+app.use("/api/game",gameRouter);
 
 
 app.get("/",(req,res) =>{
     res.send("Hello, I am groot !");
 });
+
+app.use("*",(req,res)=>{
+    res.status(404).json({
+        success: false,
+        message:"404 Route not found"
+    });
+})
 
 app.listen(3000,()=>{
     console.log("Express Server is listening on port 3000");    

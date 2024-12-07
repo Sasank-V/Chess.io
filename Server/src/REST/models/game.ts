@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 import { IUser } from "./user";
 import { IMove } from "./move";
 
@@ -6,8 +6,9 @@ export interface IGame extends Document{
     player1:mongoose.Types.ObjectId | IUser,
     player2:mongoose.Types.ObjectId | IUser,
     moves:mongoose.Types.ObjectId[] | IMove[],
-    winner:number,
-    reason:string
+    isGameOver:Boolean,
+    winner:Types.ObjectId,
+    reason:String
 }
 
 const gameSchema = new mongoose.Schema({
@@ -23,13 +24,17 @@ const gameSchema = new mongoose.Schema({
         type:Schema.Types.ObjectId,
         ref : "Move"
     }],
+    isGameOver : {
+        type:Boolean,
+        default:false,
+    },
     winner : {
-        type: Number, // 1 - If player1 wins , 2 - If Player2 wins
-        required:true,
+        type: Schema.Types.ObjectId,
+        ref:"User",
     },
     reason : {
         type:String,
-        required: true
+        default: "",
     }
 });
 const Game = mongoose.model<IGame>("Game",gameSchema);

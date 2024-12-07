@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@types/axios": "^0.14.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
@@ -7,6 +8,7 @@
     "@types/mongodb": "^4.0.7",
     "@types/nodemailer": "^6.4.17",
     "@types/ws": "^8.5.12",
+    "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "chess.js": "^1.0.0-beta.8",
     "cookie-parser": "^1.4.7",

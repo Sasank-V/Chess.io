@@ -1,12 +1,14 @@
-import mongoose, { Date, Document, Schema } from "mongoose";
+import mongoose, { Date, Document, Schema, Types } from "mongoose";
 import { IGame } from "./game";
 
-export interface IUser extends Document {
+export interface IUser extends Document{
+    _id: Types.ObjectId,
     username: string,
     password:string,
     email:string,
-    friends:mongoose.Types.ObjectId[] | IUser[],
-    games:mongoose.Types.ObjectId[] | IGame[],
+    picture:string,
+    friends:Types.ObjectId[] | IUser[],
+    games:Types.ObjectId[] | IGame[],
     rating:number,
     refreshToken:string,
     OTP:string,
@@ -17,6 +19,7 @@ const userSchema = new mongoose.Schema({
     username : {
         type: String,
         required : true,
+        unique:true,
     },
     password : {
         type:String,
@@ -25,6 +28,7 @@ const userSchema = new mongoose.Schema({
     email : {
         type:String,
         required:true,
+        unique:true,
     },
     picture : {
         type:String,

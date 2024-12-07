@@ -9,7 +9,7 @@ import { SHA256 } from 'crypto-js';
 // {username: "", password: "", email: ""}
 export const signupHandler: RequestHandler<{}, AuthResponse, AuthRequestBody> = async (req, res) => {
     try {
-        const { username, password, email } = req.body;
+        const { username, password, email,photo} = req.body;
         const user = await User.findOne({ email: email }) as IUser | null;
         if (user) {
             res.status(409).json({
@@ -21,7 +21,8 @@ export const signupHandler: RequestHandler<{}, AuthResponse, AuthRequestBody> = 
         const newUser = new User({
             username,
             password,
-            email
+            email,
+            picture:photo,
         });
         await newUser.save();
         const welcomMailOptions = getWelcomeMailOptions(newUser.username,newUser.email);
@@ -85,7 +86,8 @@ export const loginHandler:RequestHandler<{},LoginResponse,AuthRequestBody> = asy
             data:{
                 accessToken:accessToken,
                 username:user.username,
-                expiresAt: Date.now() + (60 * 1000),
+                expiresAt: Date.now() + (60 * 60 * 1000),
+                photo:user.picture,
             }
         })
 
@@ -173,7 +175,7 @@ export const refreshHandler: RequestHandler<{},LoginResponse> = async (req,res) 
                 message:"Access Token refreshed successfully",
                 data:{
                     accessToken:accessToken,
-                    expiresAt:Date.now() + 60 * 1000,
+                    expiresAt:Date.now() + 60 * 60 * 1000,
                 }
             })
         });

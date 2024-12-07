@@ -2,6 +2,7 @@ export interface AuthRequestBody {
     username: string;
     password: string;
     email: string;
+    photo:string;
 }
 
 export interface AuthResponse {
@@ -16,6 +17,7 @@ export interface LoginResponse{
         accessToken?:string,
         username?:string,
         expiresAt?:Number,
+        photo?:string,
     }
 }
 
