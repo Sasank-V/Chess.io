@@ -22,7 +22,7 @@ const NavBar = () => {
     const handleWidth = () => {
       setWidth(window.innerWidth);
     };
-    console.log(photo);
+    // console.log(photo);
     window.addEventListener("resize", handleWidth);
     return () => window.removeEventListener("resize", handleWidth);
   }, []);
