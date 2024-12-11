@@ -234,7 +234,7 @@ export default function Home() {
       </section>
       <div className="h-[2px] bg-white w-[90%] divider"></div>
       <footer className="py-8 text-white flex flex-col items-center gap-3" >
-      <div className="flex gap-3 items-center items-baseline">
+      <div className="flex gap-3 flex-col items-center">
       <h1 className="text-3xl shrink-0">Contact Us</h1>
         <a href="https://www.linkedin.com/in/sasank-v-a75a58279/" className="flex gap-2"><Linkedin/>LinkedIn</a>
         <a href="https://github.com/Sasank-V" className="flex gap-2"><Github/>Github</a>
