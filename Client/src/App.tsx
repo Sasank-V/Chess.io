@@ -17,7 +17,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { refresh } from "./hooks/useRefresh.ts";
 import NavBar from "./components/Common/NavBar.tsx";
 import Cookies from "js-cookie";
-import { axiosC } from "./AxiosConfig.ts";
 
 const NavbarWrapper = () => {
   const location = useLocation();
@@ -85,8 +84,6 @@ const App = () => {
           console.log("Got No new AccessToken");
           return;
         }
-        const response2 = await axiosC.get("/user/profile");
-        console.log(response2.data);
         setAccessToken(newAccessToken);
         console.log("Token Refreshed");
       }catch(error){
