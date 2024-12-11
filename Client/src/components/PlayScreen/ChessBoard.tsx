@@ -1,11 +1,12 @@
 import { Chess, Square } from "chess.js";
 import { useContext, useEffect, useState, useRef } from "react";
 import ChessPiece from "./ChessPiece";
-import { GameContext } from "../context/context";
-import { useSocket } from "../hooks/useSocket";
-import { GAME_OVER, MOVE, PLAYER_RESIGN,} from "./Messages";
+import { GameContext } from "../../context/gameContext";
+import { useSocket } from "../../hooks/useSocket";
+import { GAME_OVER, MOVE, PLAYER_RESIGN} from "../Common/Messages";
 import { useNavigate } from "react-router-dom";
-import JoinedComp from "./JoinedComp";
+import JoinedScreen from "./JoinedScreen";
+import { UserContext } from '../../context/userContext';
 
 type Move = {
   from: string;
@@ -22,6 +23,9 @@ export default function ChessBoard(inp:Input) {
   const {gameJoined,setGameJoined} = inp;
   const gameContext = useContext(GameContext);
   if (!gameContext) throw new Error("Game context Not found");
+  const userContext = useContext(UserContext);
+  if(!userContext) throw new Error("User context not found");
+  const {username} = userContext;
 
   const { color, setIsWinner, setReason, setHasSocket } = gameContext;
 
@@ -44,7 +48,7 @@ export default function ChessBoard(inp:Input) {
 
   const rowLabels = [8, 7, 6, 5, 4, 3, 2, 1];
   const colLabels = ["A", "B", "C", "D", "E", "F", "G", "H"];
-  
+
 
   useEffect(()=>{
     window.addEventListener("resize",()=>{
@@ -66,7 +70,7 @@ export default function ChessBoard(inp:Input) {
       setBoardWidth(newWidth);
       setBoardHeight(newWidth);
     }
-  },[screenWidth])
+  },[screenWidth]);
 
   useEffect(() => {
     if (!socket) return;
@@ -83,6 +87,7 @@ export default function ChessBoard(inp:Input) {
         }
         case GAME_OVER:
           if (message.payload.winner === color) setIsWinner(true);
+          socket.close()
           setHasSocket(false);
           setReason(message.payload.reason);
           navigate("/gameover");
@@ -96,7 +101,7 @@ export default function ChessBoard(inp:Input) {
       }
     };
     socket.onmessage = handleMessage;
-  }, [socket, turn, invalidMove, color, setIsWinner, setHasSocket, setReason, navigate]);
+  }, [socket, turn, invalidMove, color, setIsWinner, setHasSocket, setReason, navigate,username]);
 
   const isPromotion = (from: Square, to: Square): boolean => {
     const piece = chessRef.current.get(from);
@@ -180,9 +185,9 @@ export default function ChessBoard(inp:Input) {
   return (
     !gameJoined ? 
       <div className="w-[100vw] h-[100vh]">
-        <JoinedComp setGameJoined={setGameJoined}/>
+        <JoinedScreen setGameJoined={setGameJoined}/>
       </div> :  
-    <div className="w-full h-full flex-center flex-col gap-5">
+    <div className="w-full h-full flex-center flex-col gap-5 ">
       <h2 className="text-white text-lg turn-text">
         {turn === color ? "Your Turn" : "Wait for opponent to play"}
       </h2>

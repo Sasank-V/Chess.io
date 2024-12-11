@@ -1,40 +1,170 @@
-import Home from './screens/Home.tsx'
-import Play from "./screens/Play.tsx";
-import WaitingPage from './screens/WaitingPage.tsx';
+import Home from "./screens/Home.tsx";
+import Play from "./screens/PlayScreen.tsx";
+import WaitingPage from "./screens/WaitingPage.tsx";
 import GameOver from "./screens/GameOver.tsx";
-import NotFound from './screens/NotFound.tsx';
-import PrivateRoute from './components/PrivateRoute.tsx';
+import NotFound from "./screens/NotFound.tsx";
+import PrivateRoute from "./components/Common/PrivateRoute.tsx";
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { GameContext } from './context/context.ts';
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { GameContext } from "./context/gameContext.ts";
+import { useEffect, useState } from "react";
+import LoginPage from "./screens/LoginPage.tsx";
+import SignUpPage from "./screens/SignUpPage.tsx";
+import ForgotPassPage from "./screens/ForgotPassPage.tsx";
+import { UserContext } from "./context/userContext.ts";
+import { ToastContainer} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { refresh } from "./hooks/useRefresh.ts";
+import NavBar from "./components/Common/NavBar.tsx";
+import Cookies from "js-cookie";
+import { axiosC } from "./AxiosConfig.ts";
+
+const NavbarWrapper = () => {
+  const location = useLocation();
+  
+  // Define paths where navbar should not appear
+  const hideNavbarPaths = ["/wait","/play"];
+  
+  const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
+
+  return shouldShowNavbar ? (
+    <section className="z-50 w-full">
+      <NavBar/> 
+    </section>
+  ) : null;
+};
 
 const App = () => {
   const [color, setColor] = useState<string>("ToBeGiven");
   const [isWinner, setIsWinner] = useState<boolean>(false);
-  const [reason, setReason] = useState("ToBeSet");
-  const [hasSocket,setHasSocket] = useState(false);
+  const [reason, setReason] = useState<string>("");
+  const [hasSocket, setHasSocket] = useState(false);
+  const [oppName,setOppName] = useState<string>("");
+
+  const [username, setUsername] = useState<string>("");
+  const [accessToken, setAccessToken] = useState<string>("");
+  const [expiry, setExpiry] = useState<number>(0);
+  const [isLoggedIn,setIsLoggedIn] = useState<boolean>(false);
+  const [photo,setPhoto] = useState<string>("");
+
+  
+  useEffect(() => {
+    // Check cookies when app loads
+    const savedUsername = Cookies.get('username');
+    const savedToken = Cookies.get('accessToken');
+    const savedExpiry = Cookies.get('expiry');
+    const savedPhoto = Cookies.get("photo");
+
+    if (savedUsername && savedToken && savedExpiry && savedPhoto) {
+      const expiryTime = parseInt(savedExpiry);
+      const currentTime = new Date().getTime();
+      if (expiryTime > currentTime) {
+        setUsername(savedUsername);
+        setAccessToken(savedToken);
+        setExpiry(parseInt(savedExpiry));
+        setPhoto(savedPhoto);
+        setIsLoggedIn(true);
+        // console.log("Got it");
+      } else {
+        // Clear expired cookies
+        Cookies.remove('username');
+        Cookies.remove('accessToken');
+        Cookies.remove('expiry');
+      }
+    }
+  }, []);
+
+
+  useEffect(()=>{
+    if(!accessToken) return;
+    const refreshAccessToken = async () => {
+      try{
+        const res = await refresh();
+        const newAccessToken = res?.data.accessToken;
+        if(!newAccessToken){
+          console.log("Got No new AccessToken");
+          return;
+        }
+        const response2 = await axiosC.get("/user/profile");
+        console.log(response2.data);
+        setAccessToken(newAccessToken);
+        console.log("Token Refreshed");
+      }catch(error){
+        console.log("Error while refreshing token: ",error);
+      }
+    }
+    const timer = setTimeout(()=>{
+      refreshAccessToken();
+    },5*60);
+    return ()=>clearTimeout(timer);
+  },[accessToken]);
 
   return (
     <>
       <BrowserRouter>
-        <GameContext.Provider value={{ color, setColor, isWinner, setIsWinner, reason, setReason,hasSocket,setHasSocket}}>
-          <Routes>
-            <Route path='/' element={<Home />} />
-            <Route path='/wait' element={
-              <PrivateRoute>
-                <WaitingPage />
-              </PrivateRoute>
-            } />
-            <Route path='/play' element={
-              <PrivateRoute>
-                <Play />
-              </PrivateRoute>
-            } />
-            <Route path='/gameover' element={<GameOver />} />
-            <Route path='/*' element={<NotFound />} />
-          </Routes>
-        </GameContext.Provider>
+        <UserContext.Provider
+          value={{
+            username,
+            setUsername,
+            accessToken,
+            setAccessToken,
+            expiry,
+            setExpiry,
+            isLoggedIn,
+            setIsLoggedIn,
+            photo,
+            setPhoto
+          }}
+        >
+          <GameContext.Provider
+            value={{
+              color,
+              setColor,
+              isWinner,
+              setIsWinner,
+              reason,
+              setReason,
+              hasSocket,
+              setHasSocket,
+              oppName,
+              setOppName
+            }}
+          >
+            <NavbarWrapper/>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/forgot" element={<ForgotPassPage />} />
+              <Route
+                path="/wait"
+                element={<WaitingPage />}
+              />
+              <Route
+                path="/play"
+                element={
+                  <PrivateRoute>
+                    <Play />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/gameover" element={<GameOver />} />
+              <Route path="/*" element={<NotFound />} />
+            </Routes>
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="colored"
+            />
+          </GameContext.Provider>
+        </UserContext.Provider>
       </BrowserRouter>
     </>
   );

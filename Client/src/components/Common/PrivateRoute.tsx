@@ -1,6 +1,6 @@
 import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GameContext } from '../context/context';
+import { GameContext } from '../../context/gameContext';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const navigate = useNavigate();
