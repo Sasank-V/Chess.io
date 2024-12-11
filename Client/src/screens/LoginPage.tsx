@@ -27,7 +27,6 @@ const LoginPage = () => {
     passRef.current.type =
       passRef.current?.type == "password" ? "text" : "password";
   };
-
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     try {

@@ -22,6 +22,7 @@ const NavBar = () => {
     const handleWidth = () => {
       setWidth(window.innerWidth);
     };
+    console.log(photo);
     window.addEventListener("resize", handleWidth);
     return () => window.removeEventListener("resize", handleWidth);
   }, []);
@@ -81,7 +82,7 @@ const NavBar = () => {
                 onClick={() => navigate("/profile")}
               >
                 <img
-                  src={photo ? photo : "https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?…"}
+                  src={photo}
                   alt="Profile-Logo"
                 />
               </div>
@@ -162,9 +163,9 @@ const NavBar = () => {
                         navigate("/profile");
                         setToggleOpen(false);
                     }}>
-                      <div className="w-[40px] rounded-full overflow-hidden ">
+                      <div className="w-[40px] my-1 rounded-full overflow-hidden">
                         <img
-                          src="https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?…"
+                          src={photo}
                           alt="Profile-Logo"
                         />
                       </div>
