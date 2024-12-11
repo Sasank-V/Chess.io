@@ -5,7 +5,7 @@ import GameOver from "./screens/GameOver.tsx";
 import NotFound from "./screens/NotFound.tsx";
 import PrivateRoute from "./components/Common/PrivateRoute.tsx";
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { GameContext } from "./context/gameContext.ts";
 import { useEffect, useState } from "react";
 import LoginPage from "./screens/LoginPage.tsx";
@@ -17,6 +17,22 @@ import "react-toastify/dist/ReactToastify.css";
 import { refresh } from "./hooks/useRefresh.ts";
 import NavBar from "./components/Common/NavBar.tsx";
 import Cookies from "js-cookie";
+import { axiosC } from "./AxiosConfig.ts";
+
+const NavbarWrapper = () => {
+  const location = useLocation();
+  
+  // Define paths where navbar should not appear
+  const hideNavbarPaths = ["/wait","/play"];
+  
+  const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
+
+  return shouldShowNavbar ? (
+    <section className="z-50 w-full">
+      <NavBar/> 
+    </section>
+  ) : null;
+};
 
 const App = () => {
   const [color, setColor] = useState<string>("ToBeGiven");
@@ -31,6 +47,7 @@ const App = () => {
   const [isLoggedIn,setIsLoggedIn] = useState<boolean>(false);
   const [photo,setPhoto] = useState<string>("");
 
+  
   useEffect(() => {
     // Check cookies when app loads
     const savedUsername = Cookies.get('username');
@@ -68,6 +85,8 @@ const App = () => {
           console.log("Got No new AccessToken");
           return;
         }
+        const response2 = await axiosC.get("/user/profile");
+        console.log(response2.data);
         setAccessToken(newAccessToken);
         console.log("Token Refreshed");
       }catch(error){
@@ -76,7 +95,7 @@ const App = () => {
     }
     const timer = setTimeout(()=>{
       refreshAccessToken();
-    },5*60*1000);
+    },5*60);
     return ()=>clearTimeout(timer);
   },[accessToken]);
 
@@ -111,9 +130,7 @@ const App = () => {
               setOppName
             }}
           >
-            <section className="z-50 w-full">
-              <NavBar/> 
-            </section>
+            <NavbarWrapper/>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
