@@ -9,6 +9,7 @@ export interface IUser extends Document{
     picture:string,
     friends:Types.ObjectId[] | IUser[],
     games:Types.ObjectId[] | IGame[],
+    gamesWon: Number,
     rating:number,
     refreshToken:string,
     OTP:string,
@@ -42,6 +43,10 @@ const userSchema = new mongoose.Schema({
         type:Schema.Types.ObjectId,
         ref : "Game"
     }],
+    gamesWon : {
+        type:Number,
+        default:0,
+    },
     rating : {
         type : Number,
         default : 500

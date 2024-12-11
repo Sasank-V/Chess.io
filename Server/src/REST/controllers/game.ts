@@ -4,6 +4,7 @@ import User, { IUser } from "../models/user";
 import Game from "../models/game";
 import { Schema, Types } from "mongoose";
 import Move, { IMove } from "../models/move";
+import { IGame } from '../models/game';
 
 export const createGameHandler: RequestHandler<{},CreateGameResponse,CreateGameRequest> = async (req,res) => {
     try {
@@ -19,6 +20,11 @@ export const createGameHandler: RequestHandler<{},CreateGameResponse,CreateGameR
         }
         const game = new Game({player1:user1._id,player2:user2._id});
         await game.save();
+
+        const gameId = game._id as Types.ObjectId & IGame;
+        user1.games.push(gameId); user2.games.push(gameId);
+        await user1.save(); await user2.save();
+
         res.status(201).json({
             success:true,
             message:"New Game was created successfully",
@@ -88,8 +94,8 @@ export const gameOverHandler: RequestHandler<{},GameOverResponse,GameOverRequest
         game.winner = winner._id;
         game.isGameOver = true;
         game.reason = reason;
-
         await game.save();
+        
         res.status(200).json({
             success:true,
             message:"Game Status Updated"

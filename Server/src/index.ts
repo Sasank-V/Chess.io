@@ -35,7 +35,7 @@ import { connectToDB } from './database';
 import {default as authRouter} from './REST/routes/auth';
 import {default as userRouter} from "./REST/routes/user";
 import {default as gameRouter} from "./REST/routes/game";
-import { verifyJWT } from './REST/middleware/auth';
+// import { verifyJWT } from './REST/middleware/auth';
 
 
 const app = express();
@@ -59,7 +59,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
 app.use("/api/auth",authRouter);
-app.use("/api/user",userRouter);
+// app.use("/api/user",verifyJWT,userRouter);
 app.use("/api/game",gameRouter);
 
 
