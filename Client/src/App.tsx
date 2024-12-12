@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { UserContext } from "./context/userContext.ts";
 import { ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { refresh } from "./hooks/useRefresh.ts";
+
 import NavBar from "./screens/NavBar.tsx";
 import Cookies from "js-cookie";
 
@@ -39,8 +39,6 @@ const App = () => {
   const [oppName,setOppName] = useState<string>("");
 
   const [username, setUsername] = useState<string>("");
-  const [accessToken, setAccessToken] = useState<string>("");
-  const [expiry, setExpiry] = useState<number>(0);
   const [isLoggedIn,setIsLoggedIn] = useState<boolean>(false);
   const [photo,setPhoto] = useState<string>("");
 
@@ -48,51 +46,16 @@ const App = () => {
   useEffect(() => {
     // Check cookies when app loads
     const savedUsername = Cookies.get('username');
-    const savedToken = Cookies.get('accessToken');
-    const savedExpiry = Cookies.get('expiry');
     const savedPhoto = Cookies.get("photo");
 
-    if (savedUsername && savedToken && savedExpiry && savedPhoto) {
-      const expiryTime = parseInt(savedExpiry);
-      const currentTime = new Date().getTime();
-      if (expiryTime > currentTime) {
+    if (savedUsername && savedPhoto) {
         setUsername(savedUsername);
-        setAccessToken(savedToken);
-        setExpiry(parseInt(savedExpiry));
         setPhoto(savedPhoto);
         setIsLoggedIn(true);
         // console.log("Got it");
-      } else {
-        // Clear expired cookies
-        Cookies.remove('username');
-        Cookies.remove('accessToken');
-        Cookies.remove('expiry');
-      }
     }
   }, []);
 
-
-  useEffect(()=>{
-    if(!accessToken) return;
-    const refreshAccessToken = async () => {
-      try{
-        const res = await refresh();
-        const newAccessToken = res?.data.accessToken;
-        if(!newAccessToken){
-          console.log("Got No new AccessToken");
-          return;
-        }
-        setAccessToken(newAccessToken);
-        console.log("Token Refreshed");
-      }catch(error){
-        console.log("Error while refreshing token: ",error);
-      }
-    }
-    const timer = setTimeout(()=>{
-      refreshAccessToken();
-    },5*60*1000);
-    return ()=>clearTimeout(timer);
-  },[accessToken]);
 
   return (
     <>
@@ -101,10 +64,6 @@ const App = () => {
           value={{
             username,
             setUsername,
-            accessToken,
-            setAccessToken,
-            expiry,
-            setExpiry,
             isLoggedIn,
             setIsLoggedIn,
             photo,

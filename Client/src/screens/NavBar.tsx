@@ -1,8 +1,8 @@
-import {useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { UserContext } from "../context/userContext";
 import { CircleX, LogOut, SquareMenu } from "lucide-react";
 import { axiosC } from "../AxiosConfig";
-import { AuthResponse, LoginResponse, JWTDecoded } from '../types/auth';
+import { LoginResponse, JWTDecoded } from "../types/auth";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -24,8 +24,6 @@ const NavBar = () => {
     isLoggedIn,
     setIsLoggedIn,
     setUsername,
-    setAccessToken,
-    setExpiry,
     photo,
     setPhoto,
   } = userContext;
@@ -57,39 +55,31 @@ const NavBar = () => {
     });
   }, [toggleOpen]);
 
-  const handleLogin = async (username:string,email:string,photo:string) => {
+  const handleLogin = async (
+    username: string,
+    email: string,
+    photo: string
+  ) => {
     try {
       const response = await axiosC.post<LoginResponse>("/auth/login", {
         username,
         photo,
-        email
+        email,
       });
 
       const res = response.data;
       if (res.success) {
-        setUsername(res.data!.username);
-        setAccessToken(res.data!.accessToken);
-        setExpiry(res.data!.expiresAt);
         setIsLoggedIn(true);
 
         //Set Cookies
-        Cookies.set("username", res.data!.username, {
-          expires: new Date(res.data!.expiresAt),
-          path:"/"
-        });
-        Cookies.set("accessToken", res.data!.accessToken, {
-          expires: new Date(res.data!.expiresAt),
-          path:"/"
-        });
-        Cookies.set("expiry", res.data!.expiresAt+"", {
-          expires: new Date(res.data!.expiresAt),
-          path:"/"
-        });
-        Cookies.set("photo", res.data!.photo, {
+        Cookies.set("username",username, {
           expires: 1,
           path: "/",
         });
-
+        Cookies.set("photo", photo, {
+          expires: 1,
+          path: "/",
+        });
         toast.success("Login Successful");
         navigate("/");
       } else {
@@ -98,7 +88,9 @@ const NavBar = () => {
     } catch (err) {
       console.log("Error in login: ", err);
       const error = err as AxiosError;
-      const res:LoginResponse|null = error.response? error.response?.data as LoginResponse : null ;
+      const res: LoginResponse | null = error.response
+        ? (error.response?.data as LoginResponse)
+        : null;
       toast.error(res ? res.message : "Try Again");
     }
   };
@@ -106,26 +98,19 @@ const NavBar = () => {
   const handleLogout = async () => {
     try {
       googleLogout();
-      const response = await axiosC.post("/auth/logout");
-      const res: AuthResponse = response.data;
-      if (res.success) {
-        setIsLoggedIn(false);
-        setUsername("");
-        setExpiry(0);
-        setAccessToken("");
+      setIsLoggedIn(false);
+      setUsername("");
 
-        //Clear cookies
-        Cookies.remove("username");
-        Cookies.remove("accessToken");
-        Cookies.remove("expiry");
-        Cookies.remove("photo");
-
-        toast.success("Successfully Logged out");
-      }
+      //Clear cookies
+      Cookies.remove("username");
+      Cookies.remove("photo");
+      toast.success("Successfully Logged out");
     } catch (err) {
       console.log("Error while logout : ", err);
       const error = err as AxiosError;
-      const res:LoginResponse|null = error.response? error.response?.data as LoginResponse : null ;
+      const res: LoginResponse | null = error.response
+        ? (error.response?.data as LoginResponse)
+        : null;
       toast.error(res ? res.message : "Try Again");
     }
   };
@@ -153,10 +138,12 @@ const NavBar = () => {
             <div className="flex">
               <GoogleLogin
                 onSuccess={(credentialResponse) => {
-                  if(!credentialResponse.credential) return;
-                  const decoded:JWTDecoded = jwtDecode(credentialResponse.credential);
+                  if (!credentialResponse.credential) return;
+                  const decoded: JWTDecoded = jwtDecode(
+                    credentialResponse.credential
+                  );
                   setPhoto(decoded.picture);
-                  handleLogin(decoded.name,decoded.email,decoded.picture);
+                  handleLogin(decoded.name, decoded.email, decoded.picture);
                 }}
                 onError={() => {
                   toast.error("Login Failed");
@@ -171,11 +158,7 @@ const NavBar = () => {
                 className=" border-2 border-slate-800 rounded-full overflow-hidden cursor-pointer"
                 onClick={() => navigate("/profile")}
               >
-                <img
-                  src={photo}
-                  alt="Profile"
-                  className="w-[40px] h-[40px]"
-                />
+                <img src={photo} alt="Profile" className="w-[40px] h-[40px]" />
               </div>
               <div
                 className="bg-white text-slate-800 px-3  rounded-full border-2 border-slate-800 cursor-pointer flex-center"
@@ -217,72 +200,77 @@ const NavBar = () => {
                 </label>
               </div>
               <div className="flex flex-col gap-3">
+                <div
+                  className="relative cursor-pointer"
+                  onClick={() => {
+                    setToggleOpen(false);
+                    handleStart();
+                  }}
+                >
                   <div
-                    className="relative cursor-pointer"
-                    onClick={() => {
-                      setToggleOpen(false);
-                      handleStart();
-                    }}
+                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full blur group-hover:opacity-100 transition duration-200"
+                    aria-hidden="true"
+                  ></div>
+                  <div
+                    className={`relative px-5 py-2 text-lg font-semibold text-gray-900  bg-white rounded-full transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg`}
                   >
-                    <div
-                      className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full blur group-hover:opacity-100 transition duration-200"
-                      aria-hidden="true"
-                    ></div>
-                    <div
-                      className={`relative px-5 py-2 text-lg font-semibold text-gray-900  bg-white rounded-full transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg`}
-                    >
-                      Play
-                    </div>
+                    Play
                   </div>
-              {!isLoggedIn ? (
+                </div>
+                {!isLoggedIn ? (
                   <div className="flex-center scale-110 relative ">
-                  <GoogleLogin
-                    onSuccess={(credentialResponse) => {
-                      if(!credentialResponse.credential) return;
-                      const decoded:JWTDecoded = jwtDecode(credentialResponse.credential);
-                      handleLogin(decoded.name,decoded.email,decoded.picture);
-                    }}
-                    onError={() => {
-                      toast.error("Login Failed");
-                    }}
-                    shape="pill"
-                    width={240}
-                    theme="filled_blue"
-                  />
-                </div>
-
-              ) : (
-                <div className="flex flex-col gap-5 ">
-                  <div
-                    className="flex items-center gap-3 border-2 border-slate-800 rounded-full px-3 cursor-pointer"
-                    onClick={() => {
-                      navigate("/profile");
-                      setToggleOpen(false);
-                    }}
-                  >
-                    <div className="my-1 rounded-full overflow-hidden">
-                      <img
-                        src={photo}
-                        alt="Profile-Logo"
-                        className="w-[40px] h-[40px]"
-                      />
+                    <GoogleLogin
+                      onSuccess={(credentialResponse) => {
+                        if (!credentialResponse.credential) return;
+                        const decoded: JWTDecoded = jwtDecode(
+                          credentialResponse.credential
+                        );
+                        handleLogin(
+                          decoded.name,
+                          decoded.email,
+                          decoded.picture
+                        );
+                      }}
+                      onError={() => {
+                        toast.error("Login Failed");
+                      }}
+                      shape="pill"
+                      width={240}
+                      theme="filled_blue"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-5 ">
+                    <div
+                      className="flex items-center gap-3 border-2 border-slate-800 rounded-full px-3 cursor-pointer"
+                      onClick={() => {
+                        navigate("/profile");
+                        setToggleOpen(false);
+                      }}
+                    >
+                      <div className="my-1 rounded-full overflow-hidden">
+                        <img
+                          src={photo}
+                          alt="Profile-Logo"
+                          className="w-[40px] h-[40px]"
+                        />
+                      </div>
+                      Profile
                     </div>
-                    Profile
+                    <div
+                      className="rounded-full border-2 border-slate-800 px-5 py-2 cursor-pointer flex gap-4"
+                      onClick={() => {
+                        handleLogout();
+                        navigate("/");
+                        setToggleOpen(false);
+                      }}
+                    >
+                      <LogOut />
+                      Logout
+                    </div>
                   </div>
-                  <div
-                    className="rounded-full border-2 border-slate-800 px-5 py-2 cursor-pointer flex gap-4"
-                    onClick={() => {
-                      handleLogout();
-                      navigate("/");
-                      setToggleOpen(false);
-                    }}
-                  >
-                    <LogOut />
-                    Logout
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             </div>
           </div>
         </section>

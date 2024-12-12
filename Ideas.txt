@@ -1,0 +1,8 @@
+1 - Name for Random Players
+2 - Accounts for Players
+3 - Match History - Game Replay Option
+4 - Bot Matches
+5 - Score System and LeaderBoard
+6 - Friend Accounts and Match Request
+7 - User Profile
+8 - Conduct Tournaments
