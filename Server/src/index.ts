@@ -1,9 +1,25 @@
 import { WebSocketServer } from 'ws';
 import { GameManager } from './GameFiles/Manager';
+//Express Server
+import cors from "cors";
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from 'cookie-parser';
+import { connectToDB } from './database';
+import http from "http";
+
+import {default as authRouter} from './REST/routes/auth';
+import {default as userRouter} from "./REST/routes/user";
+import {default as gameRouter} from "./REST/routes/game";
+// import { verifyJWT } from './REST/middleware/auth';
+
+
+const app = express();
+
+const server = http.createServer(app);
 
 //Websocket Server
-const wss = new WebSocketServer({ port: 8080 });
-console.log("WebSocket Server is listening on port 8080");
+const wss = new WebSocketServer({ server});
 
 const gameManager = new GameManager();
 
@@ -25,23 +41,8 @@ wss.on('connection', function connection(ws) {
 });
 
 
-//Express Server
-import cors from "cors";
-import express from "express";
-import dotenv from "dotenv";
-import cookieParser from 'cookie-parser';
-import { connectToDB } from './database';
-
-import {default as authRouter} from './REST/routes/auth';
-import {default as userRouter} from "./REST/routes/user";
-import {default as gameRouter} from "./REST/routes/game";
-// import { verifyJWT } from './REST/middleware/auth';
-
-
-const app = express();
 connectToDB();
 dotenv.config();
-
 // console.log(process.env.CLIENT_URL);
 app.use(cors({
     origin: process.env.CLIENT_URL, // Ensure this matches exactly with the frontend URL
@@ -74,6 +75,7 @@ app.use("*",(req,res)=>{
     });
 })
 
-app.listen(3000,()=>{
+server.listen(3000,()=>{
     console.log("Express Server is listening on port 3000");    
+    console.log("Websocket Server is listening on port 3000");    
 });
