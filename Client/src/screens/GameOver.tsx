@@ -29,7 +29,7 @@ const GameOver = () => {
             socket?.close();
             setReason("");
             setHasSocket(false);
-            navigate("/")
+            navigate("/wait");
             }}>
             <Button text={"Play Again"}/>
           </div>

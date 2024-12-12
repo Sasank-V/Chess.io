@@ -8,14 +8,12 @@ import PrivateRoute from "./components/Common/PrivateRoute.tsx";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { GameContext } from "./context/gameContext.ts";
 import { useEffect, useState } from "react";
-import LoginPage from "./screens/LoginPage.tsx";
-import SignUpPage from "./screens/SignUpPage.tsx";
-import ForgotPassPage from "./screens/ForgotPassPage.tsx";
+
 import { UserContext } from "./context/userContext.ts";
 import { ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { refresh } from "./hooks/useRefresh.ts";
-import NavBar from "./components/Common/NavBar.tsx";
+import NavBar from "./screens/NavBar.tsx";
 import Cookies from "js-cookie";
 
 const NavbarWrapper = () => {
@@ -27,7 +25,7 @@ const NavbarWrapper = () => {
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
 
   return shouldShowNavbar ? (
-    <section className="z-50 w-full">
+    <section className="z-50 w-full border-2 border-black">
       <NavBar/> 
     </section>
   ) : null;
@@ -92,7 +90,7 @@ const App = () => {
     }
     const timer = setTimeout(()=>{
       refreshAccessToken();
-    },5*60);
+    },5*60*1000);
     return ()=>clearTimeout(timer);
   },[accessToken]);
 
@@ -130,9 +128,6 @@ const App = () => {
             <NavbarWrapper/>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/forgot" element={<ForgotPassPage />} />
               <Route
                 path="/wait"
                 element={<WaitingPage />}

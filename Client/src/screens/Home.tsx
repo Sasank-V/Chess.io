@@ -123,10 +123,9 @@ export default function Home() {
     }
   }, []);
 
-  const useHandleStart = () => {
+  const handleStart = () => {
     if(!isLoggedIn){
       toast.warn("Login to Play");
-      navigate("/login");
       return;
     }
     // setHasSocket(true);
@@ -134,7 +133,7 @@ export default function Home() {
   };
 
   return (
-    <section className="w-full flex flex-col background items-center gap-3 overflow-x-hidden">
+    <section className="w-full flex flex-col background items-center gap-3">
       {Array.from({ length: 15 }).map((_, i) => (
         <span
           key={i}
@@ -147,7 +146,7 @@ export default function Home() {
           {pieces[i % pieces.length]}
         </span>
       ))}
-      <section className="w-full min-h-screen flex flex-col items-center justify-center relative ">
+      <section className="w-full min-h-screen flex flex-col items-center justify-center relative">
         <div className="text-white text-center mb-12 p-10 sm:p-20 relative">
           <div className="absolute top-0 left-0">
             <span className="home-peice">{pieces[0]}</span>
@@ -168,7 +167,7 @@ export default function Home() {
             Experience the thrill of online chess
           </p>
         </div>
-        <div onClick={useHandleStart}>
+        <div onClick={handleStart}>
           <Button text={"Play Now"} />
         </div>
         <div className="mt-16 text-white text-lg">
@@ -226,7 +225,7 @@ export default function Home() {
         <Crown size={"100px"}/>
         <h1 className="text-3xl">Ready to Begin Your Journey?</h1>
         <h3 className="text-lg">Join the ultimate online chess experience today</h3>
-        <div onClick={useHandleStart} className="relative cursor-pointer hover:scale-110 transition-all duration-100">
+        <div onClick={handleStart} className="relative cursor-pointer hover:scale-110 transition-all duration-100">
           <div className="bg-slate-800 text-white p-5 rounded-full text-2xl ">
             Start Playing Now
           </div>

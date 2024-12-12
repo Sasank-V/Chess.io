@@ -1,3 +1,4 @@
+import { JwtPayload } from 'jwt-decode';
 export type LoginResponse = {
     success: boolean;
     message: string;
@@ -30,4 +31,10 @@ export interface OTPResponse {
 export interface AuthResponse {
     success: boolean;
     message: string;
+}
+
+export interface JWTDecoded extends JwtPayload {
+    name : string,
+    email:string,
+    picture:string,
 }
