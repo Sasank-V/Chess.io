@@ -1,72 +1,23 @@
 import { CookieOptions, RequestHandler } from "express";
 import User, { IUser } from "../models/user";
-import { AuthResponse, LoginResponse, AuthRequestBody, OTPRequestBody, OTPResponse, UpdatePassRequestBody, ValidateOTPRequestBody } from '../types/auth';
+import { AuthResponse, LoginResponse, AuthRequestBody} from '../types/auth';
 import jwt, { JsonWebTokenError, Secret } from 'jsonwebtoken';
 import { getOTPMailOptions, getWelcomeMailOptions, sendMail} from "../utils/mailConfig";
 import { SHA256 } from 'crypto-js';
 
-// Request Format
-// {username: "", password: "", email: ""}
-export const signupHandler: RequestHandler<{}, AuthResponse, AuthRequestBody> = async (req, res) => {
+export const loginHandler: RequestHandler<{}, LoginResponse, AuthRequestBody> = async (req, res) => {
     try {
-        const { username, password, email,photo} = req.body;
-        const user = await User.findOne({ email: email }) as IUser | null;
-        if (user) {
-            res.status(409).json({
-                success: false,
-                message: "User already exists"
+        const {username, email,photo} = req.body;
+        let user = await User.findOne({ email: email }) as IUser | null;
+        if (!user){
+            user = new User({
+                username,
+                email,
+                picture:photo
             });
-            return;
-        }
-        const newUser = new User({
-            username,
-            password,
-            email,
-            picture:photo,
-        });
-        await newUser.save();
-        const welcomMailOptions = getWelcomeMailOptions(newUser.username,newUser.email);
-        sendMail(welcomMailOptions);
-        res.status(200).json({
-            success: true,
-            message: "User registered successfully"
-        });
-    } catch (error) {
-        const err = error as Error;
-        console.log("Signup Error:" , err);
-        res.status(500).json({
-            success: false,
-            message: "Internal server error during user signup"
-        });
-    }
-};
-
-const cookieOptions = {
-    httpOnly:true,
-    secure:process.env.NODE_ENV === 'production',
-    sameSite:process.env.NODE_ENV === 'production' ? "none" : "strict",
-    maxAge:24 * 60 * 60 * 1000
-};
-
-//Request Format
-//{"username" : "" , "email": "" , password: ""}
-export const loginHandler:RequestHandler<{},LoginResponse,AuthRequestBody> = async (req,res) =>{
-    try {
-        const { username, password, email } = req.body;
-        const user = await User.findOne({$or:[{username:username},{email:email}]});
-        if(!user){
-            res.status(404).json({
-                success:false,
-                message:"User doesn't exist"
-            })
-            return;
-        }
-        if(password !== user.password){
-            res.status(401).json({
-                success:false,
-                message:"Incorrect Password"
-            });
-            return;
+            await user.save();
+            const welcomMailOptions = getWelcomeMailOptions(user.username,user.email);
+            sendMail(welcomMailOptions);
         }
         const payload = {
             "username" : user.username,
@@ -89,17 +40,24 @@ export const loginHandler:RequestHandler<{},LoginResponse,AuthRequestBody> = asy
                 expiresAt: Date.now() + (60 * 60 * 1000),
                 photo:user.picture,
             }
-        })
-
+        });
     } catch (error) {
         const err = error as Error;
-        console.log("Login Error: " ,err);
+        console.log("Login Error:" , err);
         res.status(500).json({
-            success:false,
-            message:"Internal server error during user login"
-        })
+            success: false,
+            message: "Internal server error during user login"
+        });
     }
-}
+};
+
+const cookieOptions = {
+    httpOnly:true,
+    secure:process.env.NODE_ENV === 'production',
+    sameSite:process.env.NODE_ENV === 'production' ? "none" : "strict",
+    maxAge:24 * 60 * 60 * 1000
+};
+
 
 export const logoutHandler:RequestHandler<{},AuthResponse> = async (req,res) =>{
     try{
@@ -187,113 +145,4 @@ export const refreshHandler: RequestHandler<{},LoginResponse> = async (req,res) 
             message:"Internal Server Error while Refreshing JWT"
         })
     }
-}
-
-export const sendOTPHandler: RequestHandler<{},OTPResponse,OTPRequestBody> = async (req,res) => {
-    try {
-        const {namemail} = req.body;
-        const user = await User.findOne({$or:[{username:namemail},{email:namemail}]});
-        if(!user){
-            res.status(404).json({
-                success:false,
-                message:"User not found"
-            });
-            return;
-        }
-        const otp:string = (Math.ceil(Math.random()*1000000) + 1) + "";
-        const hashedOTP = SHA256(otp).toString();
-        user.OTP = hashedOTP;
-        await user.save();
-        
-        const OTPMailOptions = getOTPMailOptions(otp,user.email);
-        sendMail(OTPMailOptions);
-        
-        res.status(200).json({
-            success:true,
-            message:"OTP Sent to the mail successfully",
-            data:{
-                email:user.email,
-            }
-        });
-
-    } catch (error) {
-        console.log("Error while sending OTP:",error);
-        res.status(500).json({
-            success:false,
-            message:"Internal Server Error while sending OTP"
-        });
-    }
-}
-
-export const validateOTPHandler: RequestHandler<{},AuthResponse,ValidateOTPRequestBody> = async (req,res)=>{
-    try {
-        const {email,otp} = req.body;
-        const user = await User.findOne({email:email});
-        if(!user){
-            res.status(404).json({
-                success:false,
-                message:"User not found :(" 
-             });
-             return;
-        }
-        const hashedOTP = SHA256(otp).toString();
-        if(hashedOTP !== user.OTP){
-            res.status(400).json({
-                success:false,
-                message:"Incorrect OTP"
-            });
-            return;
-        }
-
-        user.OTP = "";
-        await user.save();
-
-        res.status(200).json({
-            success:true,
-            message:"OTP Validated successfully"
-        })
-
-    } catch (error) {
-        console.log("Error while validating OTP: ", error);
-        res.status(500).json({
-            success:false,
-            message:"Internal server error while validating OTP"
-        })
-    }
-}
-
-export const updatePassHandler: RequestHandler<{},AuthResponse,UpdatePassRequestBody> = async (req,res) => {
-    try {
-        const {email,password} = req.body;
-        const user = await User.findOne({email:email});
-        if(!user){
-            res.status(404).json({
-               success:false,
-               message:"User not found :(" 
-            });
-            return;
-        }
-
-        if(user.OTP){
-            res.status(400).send({
-                success:false,
-                message:"OTP isn't validated yet"
-            })
-        }
-
-        user.password = password;
-        await user.save();
-
-        res.status(200).json({
-            success:true,
-            message:"Password Updated successfully"
-        })
-
-    } catch (error) {
-        console.log("Internal Error while updating password: ", error);
-        res.status(500).json({
-            success:false,
-            message:"Internal Server Error while updating passwords"
-        })
-    }   
 }

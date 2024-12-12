@@ -4,7 +4,6 @@ import { IGame } from "./game";
 export interface IUser extends Document{
     _id: Types.ObjectId,
     username: string,
-    password:string,
     email:string,
     picture:string,
     friends:Types.ObjectId[] | IUser[],
@@ -21,10 +20,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required : true,
         unique:true,
-    },
-    password : {
-        type:String,
-        required : true,
     },
     email : {
         type:String,
@@ -52,10 +47,6 @@ const userSchema = new mongoose.Schema({
         default : 500
     },
     refreshToken : {
-        type:String,
-        default:""
-    },
-    OTP : {
         type:String,
         default:""
     }

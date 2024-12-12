@@ -1,6 +1,5 @@
 export interface AuthRequestBody {
     username: string;
-    password: string;
     email: string;
     photo:string;
 }
@@ -19,27 +18,4 @@ export interface LoginResponse{
         expiresAt?:Number,
         photo?:string,
     }
-}
-
-export interface OTPRequestBody {
-    namemail:string
-}
-
-export interface OTPResponse {
-    success:boolean,
-    message:string,
-    data?:{
-        email?:string,
-        otp?:string
-    }
-}
-
-export interface UpdatePassRequestBody {
-    email:string,
-    password:string, 
-}
-
-export interface ValidateOTPRequestBody {
-    email:string,
-    otp:string,
 }
