@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GameContext } from "../context/gameContext";
 import Button from "../components/Common/Button";
 import { useSocket } from "../hooks/useSocket";
+import { UserContext } from "../context/userContext";
 const GameOver = () => {
 
   const gameContext = useContext(GameContext);
@@ -10,11 +11,14 @@ const GameOver = () => {
   const {isWinner,reason,setHasSocket,setReason} = gameContext;
   const socket = useSocket();
   const navigate = useNavigate();
+  const userContext = useContext(UserContext);
+  if(!userContext) throw new Error("User context not available in gameover");
+  const {isLoggedIn} = userContext;
   useEffect(()=>{
-    if(reason === ""){
+    if(reason === "" || !isLoggedIn){
       return navigate("/");
     }
-  },[reason]);
+  },[reason,isLoggedIn]);
 
   return (
     <div className="w-full h-[100vh] flex-center flex-col text-white gap-4 background">

@@ -25,7 +25,7 @@ const NavbarWrapper = () => {
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
 
   return shouldShowNavbar ? (
-    <section className="z-50 w-full border-2 border-black">
+    <section className="absolute z-50 w-full p-5">
       <NavBar/> 
     </section>
   ) : null;
