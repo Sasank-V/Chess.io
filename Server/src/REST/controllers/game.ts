@@ -28,7 +28,7 @@ export const createGameHandler: RequestHandler<{},CreateGameResponse,CreateGameR
         res.status(201).json({
             success:true,
             message:"New Game was created successfully",
-            gameId:game._id as String,
+            gameId:game._id.toString(),
         })
         return;
     } catch (error) {

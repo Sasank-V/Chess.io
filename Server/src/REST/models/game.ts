@@ -3,6 +3,7 @@ import { IUser } from "./user";
 import { IMove } from "./move";
 
 export interface IGame extends Document{
+    _id:mongoose.Types.ObjectId
     player1:mongoose.Types.ObjectId | IUser,
     player2:mongoose.Types.ObjectId | IUser,
     moves:mongoose.Types.ObjectId[] | IMove[],
