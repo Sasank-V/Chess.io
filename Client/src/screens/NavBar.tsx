@@ -97,7 +97,7 @@ const NavBar = () => {
               credentialResponse.credential
             );
             setPhoto(decoded.picture);
-            console.log(decoded.picture);
+            // console.log(decoded.picture);
             handleLogin(decoded.name, decoded.email, decoded.picture);
           }}
           onError={() => {
