@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { axiosC } from "../AxiosConfig";
 import { GetGameInfoReponse } from "../../../Server/src/REST/controllers/user";
@@ -11,7 +11,6 @@ import {
   SkipBack,
   SkipForward,
   Swords,
-  Trophy,
 } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
