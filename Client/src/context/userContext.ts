@@ -1,12 +1,14 @@
-import { createContext} from "react";
+import { createContext } from "react";
 
-interface ContextType{
-    username : string,
-    setUsername : (val:string) => void
-    isLoggedIn : boolean,
-    setIsLoggedIn : (val:boolean) => void,
-    photo:string,
-    setPhoto:(val:string)=>void,
+interface ContextType {
+  username: string;
+  setUsername: (val: string) => void;
+  isLoggedIn: boolean;
+  setIsLoggedIn: (val: boolean) => void;
+  photo: string;
+  setPhoto: (val: string) => void;
+  email: string;
+  setEmail: (val: string) => void;
 }
 
 export const UserContext = createContext<ContextType | undefined>(undefined);

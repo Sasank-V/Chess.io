@@ -13,7 +13,12 @@ import { Move, GameOverReply, Player } from "./Types/GameTypes";
 import { WorkerMoveReply } from "./Types/WorkerTypes";
 import path from "path";
 import { axiosC } from "./utils/AxiosConfig";
-import { AddMoveRequest, AddMoveResponse, CreateGameResponse, GameOverResponse } from "../REST/types/game";
+import {
+  AddMoveRequest,
+  AddMoveResponse,
+  CreateGameResponse,
+  GameOverResponse,
+} from "../REST/types/game";
 import { Axios } from "axios";
 
 export class Game {
@@ -23,6 +28,7 @@ export class Game {
   private startTime: Date;
   private worker: Worker;
   private gameId: String;
+  private gameOver: Boolean;
 
   constructor(player1: Player, player2: Player) {
     this.player1 = player1;
@@ -31,7 +37,8 @@ export class Game {
     this.startTime = new Date();
     const workerPath = path.join(__dirname, "Worker.js");
     this.worker = new Worker(workerPath);
-    this.gameId ="";
+    this.gameId = "";
+    this.gameOver = false;
     this.createGame();
 
     // Setup worker message listener only once in the constructor
@@ -44,7 +51,7 @@ export class Game {
         type: INIT_GAME,
         payload: {
           color: "w",
-          oppName: this.player2.username
+          oppName: this.player2.username,
         },
       })
     );
@@ -53,29 +60,32 @@ export class Game {
         type: INIT_GAME,
         payload: {
           color: "b",
-          oppName: this.player1.username
+          oppName: this.player1.username,
         },
       })
     );
   }
 
-  async createGame(){
-    try{
-      const response = await axiosC.post<CreateGameResponse>("/game/create",{
-        player1:this.player1.username,
-        player2:this.player2.username
+  async createGame() {
+    try {
+      const response = await axiosC.post<CreateGameResponse>("/game/create", {
+        player1: this.player1.username,
+        player2: this.player2.username,
       });
       const res = response.data;
-      if(res.success && res.gameId) this.gameId = res.gameId;
-    }catch(error){
-      console.log("error while creating game in Game.ts",error);
+      if (res.success && res.gameId) this.gameId = res.gameId;
+    } catch (error) {
+      console.log("error while creating game in Game.ts", error);
     }
   }
 
   validateUser(socket: WebSocket): boolean {
-    if (socket != this.player1.socket && socket != this.player2.socket) return false;
-    if (socket == this.player1.socket && this.board?.turn() == "b") return false;
-    if (socket == this.player2.socket && this.board?.turn() == "w") return false;
+    if (socket != this.player1.socket && socket != this.player2.socket)
+      return false;
+    if (socket == this.player1.socket && this.board?.turn() == "b")
+      return false;
+    if (socket == this.player2.socket && this.board?.turn() == "w")
+      return false;
     return true;
   }
 
@@ -104,18 +114,19 @@ export class Game {
     const { isGameOver, winner, reason } = this.checkGameover();
     if (isGameOver) {
       try {
-        if(this.gameId){
-          const response = await axiosC.post<GameOverResponse>("/game/over",{
-            gameId:this.gameId,
-            winnerUsername: (winner == 'w') ? this.player1.username : this.player2.username,
-            reason
+        if (this.gameId) {
+          const response = await axiosC.post<GameOverResponse>("/game/over", {
+            gameId: this.gameId,
+            email: winner == "w" ? this.player1.email : this.player2.email,
+            reason,
           });
           const res = response.data;
-          if(!res.success) console.log(res.message);
+          this.gameOver = true;
+          if (!res.success) console.log(res.message);
         }
       } catch (error) {
-        console.log("Error while handling Gameover",error);
-      }finally{
+        console.log("Error while handling Gameover", error);
+      } finally {
         this.player1.socket.send(
           JSON.stringify({
             type: GAME_OVER,
@@ -141,22 +152,23 @@ export class Game {
   }
 
   async sendValidMove(socket: WebSocket, move: Move) {
-    const oppPlayer = socket == this.player1.socket ? this.player2 : this.player1;
+    const oppPlayer =
+      socket == this.player1.socket ? this.player2 : this.player1;
     this.board?.move(move);
     try {
-      if(this.gameId){
-        const response = await axiosC.post<AddMoveResponse>("/game/move",{
-          from:move.from,
-          to:move.to,
+      if (this.gameId) {
+        const response = await axiosC.post<AddMoveResponse>("/game/move", {
+          from: move.from,
+          to: move.to,
           promotion: move.promotion || "",
-          gameId:this.gameId,
+          gameId: this.gameId,
         });
         const res = response.data;
-        if(!res.success) console.log(res.message);
+        if (!res.success) console.log(res.message);
       }
     } catch (error) {
-      console.log("Error while adding Move",error);
-    }finally{
+      console.log("Error while adding Move", error);
+    } finally {
       oppPlayer.socket.send(
         JSON.stringify({
           type: MOVE,
@@ -164,7 +176,6 @@ export class Game {
         })
       );
     }
-
   }
 
   makeMove(socket: WebSocket, move: Move) {
@@ -184,7 +195,7 @@ export class Game {
 
   handleWorkerMessage(message: WorkerMoveReply) {
     const { move, isValid } = message;
-    const player = this.board?.turn() === 'w' ? this.player1 : this.player2;
+    const player = this.board?.turn() === "w" ? this.player1 : this.player2;
 
     if (isValid) {
       // Send valid move to opponent
@@ -204,20 +215,27 @@ export class Game {
   }
 
   async handlePlayerResign(socket: WebSocket) {
-    const oppPlayer = this.player1.socket == socket ? this.player2 : this.player1;
+    const oppPlayer =
+      this.player1.socket == socket ? this.player2 : this.player1;
     try {
-      if(this.gameId){
-        const response = await axiosC.post<GameOverResponse>("/game/over",{
-          gameId:this.gameId,
-          winnerUsername: oppPlayer == this.player1 ? this.player1.username : this.player1.username,
-          reason: `${oppPlayer == this.player1 ? this.player2.username : this.player1.username} Resigned` 
+      if (this.gameId && !this.gameOver) {
+        // console.log(oppPlayer.email);
+        const response = await axiosC.post<GameOverResponse>("/game/over", {
+          gameId: this.gameId,
+          email: oppPlayer.email,
+          reason: `${
+            oppPlayer.email == this.player1.email
+              ? this.player2.username
+              : this.player1.username
+          } Resigned`,
         });
         const res = response.data;
-        if(!res.success) console.log(res.message);
+        this.gameOver = true;
+        if (!res.success) console.log(res.message);
       }
     } catch (error) {
-      console.log("Error while handling Gameover",error);
-    }finally{
+      console.log("Error while handling Gameover", error);
+    } finally {
       socket.send(
         JSON.stringify({
           type: GAME_OVER,

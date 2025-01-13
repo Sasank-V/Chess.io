@@ -27,8 +27,9 @@ export class GameManager {
     this.users = this.users.filter((user) => user != socket);
     const game = this.findGameBySocket(socket);
     if (game) game.handlePlayerResign(socket);
-    else if(this.pendingUser){
-      this.pendingUser = this.pendingUser.socket == socket ? null : this.pendingUser;
+    else if (this.pendingUser) {
+      this.pendingUser =
+        this.pendingUser.socket == socket ? null : this.pendingUser;
     }
   }
   findGameBySocket(socket: WebSocket): Game | undefined {
@@ -40,7 +41,8 @@ export class GameManager {
   handleStream(socket: WebSocket, message: any) {
     const game = this.findGameBySocket(socket);
     if (!game) return;
-    const oppnentPlayer = game?.player1.socket == socket ? game.player2 : game.player1;
+    const oppnentPlayer =
+      game?.player1.socket == socket ? game.player2 : game.player1;
     oppnentPlayer.socket.send(
       JSON.stringify({
         type: WEB_STREAM,
@@ -52,22 +54,25 @@ export class GameManager {
     socket.on("message", (data) => {
       const messsage = JSON.parse(data.toString());
       if (messsage.type == INIT_GAME) {
-        const username = messsage.username;
+        const { username, email } = messsage;
         const existingGame = this.findGameBySocket(socket);
         if (existingGame) {
-            console.log("Already PLaying");
-            return;
+          console.log("Already PLaying");
+          return;
         }
 
         // Check if pending user is still connected
-        if (this.pendingUser && this.pendingUser.socket.readyState === WebSocket.OPEN) {
-          const game = new Game(this.pendingUser, {socket,username});
+        if (
+          this.pendingUser &&
+          this.pendingUser.socket.readyState === WebSocket.OPEN
+        ) {
+          const game = new Game(this.pendingUser, { socket, username, email });
           this.games.push(game);
           this.pendingUser = null;
         } else {
           // Clear any stale pending user
           this.pendingUser = null;
-          this.pendingUser = {socket,username};
+          this.pendingUser = { socket, username, email };
         }
       }
       if (messsage.type === MOVE) {

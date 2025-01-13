@@ -15,17 +15,8 @@ const NavBar = () => {
   if (!userContext) {
     throw new Error("User context not accessible");
   }
-  const {
-    username,
-    isLoggedIn,
-    setIsLoggedIn,
-    setUsername,
-    photo,
-    setPhoto,
-  } = userContext;
-
-
-
+  const { username, isLoggedIn, setIsLoggedIn, setUsername, photo, setPhoto } =
+    userContext;
 
   const handleLogin = async (
     username: string,
@@ -44,11 +35,15 @@ const NavBar = () => {
         setIsLoggedIn(true);
 
         //Set Cookies
-        Cookies.set("username",username, {
+        Cookies.set("username", username, {
           expires: 1,
           path: "/",
         });
         Cookies.set("photo", photo, {
+          expires: 1,
+          path: "/",
+        });
+        Cookies.set("email", email, {
           expires: 1,
           path: "/",
         });
@@ -76,6 +71,7 @@ const NavBar = () => {
       //Clear cookies
       Cookies.remove("username");
       Cookies.remove("photo");
+      Cookies.remove("email");
       toast.success("Successfully Logged out");
     } catch (err) {
       console.log("Error while logout : ", err);
@@ -87,42 +83,54 @@ const NavBar = () => {
     }
   };
 
-  return (
-    !isLoggedIn ? (
-      <div className="flex">
-        <GoogleLogin
-          onSuccess={(credentialResponse) => {
-            if (!credentialResponse.credential) return;
-            const decoded: JWTDecoded = jwtDecode(
-              credentialResponse.credential
-            );
-            setPhoto(decoded.picture);
-            // console.log(decoded.picture);
-            handleLogin(decoded.name, decoded.email, decoded.picture);
-          }}
-          onError={() => {
-            toast.error("Login Failed");
-          }}
-          shape="pill"
-          theme="filled_blue"
+  return !isLoggedIn ? (
+    <div className="flex">
+      <GoogleLogin
+        onSuccess={(credentialResponse) => {
+          if (!credentialResponse.credential) return;
+          const decoded: JWTDecoded = jwtDecode(credentialResponse.credential);
+          setPhoto(decoded.picture);
+          // console.log(decoded.picture);
+          handleLogin(decoded.name, decoded.email, decoded.picture);
+        }}
+        onError={() => {
+          toast.error("Login Failed");
+        }}
+        shape="pill"
+        theme="filled_blue"
+      />
+    </div>
+  ) : (
+    <div className="flex justify-between">
+      <div
+        className="overflow-hidden cursor-pointer text-white text-xl sm:text-2xl flex  items-center gap-5"
+        onClick={() => {
+          navigate("/profile");
+        }}
+      >
+        <img
+          src={photo}
+          alt="Profile"
+          className=" border-2 border-slate-800 rounded-full w-[40px] h-[40px]"
         />
+        <span className="hidden sm:flex">{username}</span>
       </div>
-    ) : (
-      <div className="flex justify-between">
+      <div className="flex text-white flex-center gap-5 sm:text-xl">
         <div
-          className="overflow-hidden cursor-pointer text-white text-2xl flex  items-center gap-5"
+          onClick={() => {
+            navigate("/");
+          }}
         >
-          <img src={photo} alt="Profile" className=" border-2 border-slate-800 rounded-full w-[40px] h-[40px]" />
-          {username}
+          Home
         </div>
         <div
-          className="bg-white text-slate-800 px-3  rounded-full border-2 border-slate-800 cursor-pointer flex-center"
+          className="bg-white text-slate-800 px-4  rounded-full border-2 border-slate-800 cursor-pointer flex-center py-2"
           onClick={handleLogout}
         >
           Logout
         </div>
       </div>
-    )
+    </div>
   );
 };
 

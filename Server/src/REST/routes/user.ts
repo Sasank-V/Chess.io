@@ -1,9 +1,9 @@
-import { Router} from "express";
-import { getUserProfileHandler } from "../controllers/user";
+import { Router } from "express";
+import { getGameInfoHandler, getUserProfileHandler } from "../controllers/user";
 const router = Router();
 
-router.get("/profile",getUserProfileHandler);
-router.get("/game/:id");
-router.post("/addFriend");
+router.post("/profile", getUserProfileHandler);
+router.get("/game/:id", getGameInfoHandler);
+// router.post("/addFriend");
 
 export default router;

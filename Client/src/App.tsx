@@ -10,23 +10,25 @@ import { GameContext } from "./context/gameContext.ts";
 import { useEffect, useState } from "react";
 
 import { UserContext } from "./context/userContext.ts";
-import { ToastContainer} from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import NavBar from "./screens/NavBar.tsx";
 import Cookies from "js-cookie";
+import ProfilePage from "./screens/ProfilePage.tsx";
+import GameView from "./screens/GameView.tsx";
 
 const NavbarWrapper = () => {
   const location = useLocation();
-  
+
   // Define paths where navbar should not appear
-  const hideNavbarPaths = ["/wait","/play"];
-  
+  const hideNavbarPaths = ["/wait", "/play"];
+
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
 
   return shouldShowNavbar ? (
     <section className="absolute z-50 w-full p-5">
-      <NavBar/> 
+      <NavBar />
     </section>
   ) : null;
 };
@@ -36,26 +38,26 @@ const App = () => {
   const [isWinner, setIsWinner] = useState<boolean>(false);
   const [reason, setReason] = useState<string>("");
   const [hasSocket, setHasSocket] = useState(false);
-  const [oppName,setOppName] = useState<string>("");
-
+  const [oppName, setOppName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [username, setUsername] = useState<string>("");
-  const [isLoggedIn,setIsLoggedIn] = useState<boolean>(false);
-  const [photo,setPhoto] = useState<string>("");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [photo, setPhoto] = useState<string>("");
 
-  
   useEffect(() => {
     // Check cookies when app loads
-    const savedUsername = Cookies.get('username');
+    const savedUsername = Cookies.get("username");
     const savedPhoto = Cookies.get("photo");
+    const savedEmail = Cookies.get("email");
 
-    if (savedUsername && savedPhoto) {
-        setUsername(savedUsername);
-        setPhoto(savedPhoto);
-        setIsLoggedIn(true);
-        // console.log("Got it");
+    if (savedUsername && savedPhoto && savedEmail) {
+      setUsername(savedUsername);
+      setPhoto(savedPhoto);
+      setEmail(savedEmail);
+      setIsLoggedIn(true);
+      // console.log("Got it");
     }
   }, []);
-
 
   return (
     <>
@@ -67,7 +69,9 @@ const App = () => {
             isLoggedIn,
             setIsLoggedIn,
             photo,
-            setPhoto
+            setPhoto,
+            email,
+            setEmail,
           }}
         >
           <GameContext.Provider
@@ -81,16 +85,19 @@ const App = () => {
               hasSocket,
               setHasSocket,
               oppName,
-              setOppName
+              setOppName,
             }}
           >
-            <NavbarWrapper/>
+            <NavbarWrapper />
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route
-                path="/wait"
-                element={<WaitingPage />}
-              />
+              <Route path="/wait" element={<WaitingPage />} />
+              {isLoggedIn && (
+                <>
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/gameview/:id" element={<GameView />} />
+                </>
+              )}
               <Route
                 path="/play"
                 element={

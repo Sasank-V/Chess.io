@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "dev": "tsc -b && node ./dist/index.js"
+  },
   "dependencies": {
     "@types/axios": "^0.14.4",
     "@types/bcryptjs": "^2.4.6",
@@ -21,6 +24,7 @@
     "mongodb": "^6.10.0",
     "mongoose": "^8.8.1",
     "nodemailer": "^6.9.16",
+    "ts-node": "^10.9.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {
