@@ -1,10 +1,8 @@
 import { RequestHandler } from "express";
-import { GetAllResponse, GetUserProfileResponse } from "../types/user";
+import { GetUserProfileResponse } from "../types/user";
 import User from "../models/user";
-import Game, { IGame } from "../models/game";
-import { Player } from "../../GameFiles/Types/GameTypes";
-import mongoose from "mongoose";
-import Move, { IMove } from "../models/move";
+import Game from "../models/game";
+import Move from "../models/move";
 
 export type GetUserRequestBody = {
   email: string;
@@ -132,9 +130,6 @@ export const getGameInfoHandler: RequestHandler<
       });
       return;
     }
-    let game_data = {
-      id: game._id,
-    };
     const player1 = await User.findById(game.player1);
     const player2 = await User.findById(game.player2);
     if (!player1 || !player2) {
