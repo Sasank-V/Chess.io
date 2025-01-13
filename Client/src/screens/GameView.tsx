@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { axiosC } from "../AxiosConfig";
-import { GetGameInfoReponse } from "../../../Server/src/REST/controllers/user";
 import { toast } from "react-toastify";
 import { Chess } from "chess.js";
 import ChessBoardView from "../components/ChessBoardView";
@@ -14,6 +13,23 @@ import {
 } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+
+export type GetGameInfoReponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    id: string;
+    player1: string;
+    player2: string;
+    moves: {
+      from: string;
+      to: string;
+      promotion: string;
+    }[];
+    winner: string;
+    reason: string;
+  };
+};
 
 const GameView = () => {
   const { id } = useParams();

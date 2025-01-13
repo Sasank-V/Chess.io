@@ -4,10 +4,29 @@ import gsap from "gsap";
 import { useContext, useEffect, useRef, useState } from "react";
 import { UserContext } from "../context/userContext";
 import { axiosC } from "../AxiosConfig";
-import { GetUserProfileResponse } from "../../../Server/src/REST/types/user";
 import { toast } from "react-toastify";
 import Button from "../components/Common/Button";
 import { useNavigate } from "react-router-dom";
+
+export type GetUserProfileResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    username: string;
+    photo: string;
+    rating: number;
+    gamesPlayed: number;
+    gamesWon: number;
+    games: {
+      white: string;
+      black: string;
+      total_moves: number;
+      won: boolean;
+      reason: string;
+      id: string;
+    }[];
+  };
+};
 
 export default function ProfilePage() {
   const userContext = useContext(UserContext);
