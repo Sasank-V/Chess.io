@@ -104,7 +104,7 @@ export default function ProfilePage() {
   }, []);
 
   return (
-    <section className="w-full flex flex-col background items-center gap-8 min-h-screen p-8">
+    <section className="w-full h-full flex flex-col background items-center gap-8 min-h-screen p-8">
       {/* Floating Chess Pieces Background */}
       {Array.from({ length: 15 }).map((_, i) => (
         <span

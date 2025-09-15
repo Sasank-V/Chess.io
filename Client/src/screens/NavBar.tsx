@@ -15,8 +15,15 @@ const NavBar = () => {
   if (!userContext) {
     throw new Error("User context not accessible");
   }
-  const { username, isLoggedIn, setIsLoggedIn, setUsername, photo, setPhoto } =
-    userContext;
+  const {
+    username,
+    isLoggedIn,
+    photo,
+    setIsLoggedIn,
+    setUsername,
+    setPhoto,
+    setEmail,
+  } = userContext;
 
   const handleLogin = async (
     username: string,
@@ -33,6 +40,8 @@ const NavBar = () => {
       const res = response.data;
       if (res.success) {
         setIsLoggedIn(true);
+        setUsername(username);
+        setEmail(email);
 
         //Set Cookies
         Cookies.set("username", username, {
