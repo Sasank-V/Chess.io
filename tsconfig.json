@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/shared-types"
+    },
+    {
+      "path": "./apps/api-service"
+    },
+    {
+      "path": "./apps/ws-service"
+    },
+    {
+      "path": "./apps/web-client"
+    }
+  ]
+}

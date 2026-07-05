@@ -1,227 +1,308 @@
-## Chess.io — Realtime Chess Server and Web Client
+# Chess.io
 
-This repository contains a realtime multiplayer chess experience:
+A production-oriented real-time multiplayer chess platform built with modern TypeScript technologies.
 
-- Client (Vite + React + TypeScript + Tailwind) in `Client/`
-- Server (Node.js + Express + WebSocket + TypeScript + MongoDB/Mongoose) in `Server/`
+Chess.io demonstrates how to build a scalable real-time application by separating concerns into independent services for the frontend, REST API, WebSocket gateway, and shared packages. The project focuses on clean architecture, strong typing, low-latency communication, and maintainability.
 
-The server exposes a REST API for persistence (users, games, moves) and a WebSocket gateway for realtime gameplay and lightweight signaling. Move validation runs in a Worker thread using `chess.js` to keep the event loop responsive under load.
+---
 
+# Features
 
-## Key features
+- Real-time multiplayer chess using WebSockets
+- Server-side move validation using `chess.js`
+- Persistent game history stored in MongoDB
+- User authentication and profile management
+- Game replay support
+- Resignation and game-over handling
+- Shared TypeScript types across frontend and backend
+- Monorepo powered by pnpm Workspaces and Turborepo
+- Modular service-oriented backend architecture
 
-- Realtime chess over WebSockets (one game per two connected peers)
-- Deterministic server-side move validation with `chess.js` executed in a worker thread
-- Game lifecycle: create, add moves, finish (checkmate/stalemate/draw or resignation)
-- MongoDB persistence for users, games, and moves
-- REST API for authentication, profile, game detail lookups, and game/move writes
-- Email notifications (welcome email and OTP template via Nodemailer/Gmail)
-- CORS configured to allow a separate frontend origin with credentials
+---
 
+# Tech Stack
 
-## Architecture overview
+## Frontend
 
-- HTTP: Express app mounted on port 3000
-	- REST routes under `/api/*`
-	- CORS restricted to `CLIENT_URL`
-- WebSocket: `ws` server bound to the same HTTP server (port 3000)
-	- `GameManager` matches users pairwise and orchestrates a `Game`
-	- `Game` coordinates two players, validates moves via Worker, persists via REST
-- Worker thread: validates candidate moves with `chess.js` to avoid blocking the main thread
-- Persistence: MongoDB via Mongoose (Users, Games, Moves)
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
 
+## Backend
 
-## Server folder structure
+- Node.js
+- Express
+- WebSocket (`ws`)
+- MongoDB
+- Mongoose
 
+## Shared Infrastructure
+
+- pnpm Workspaces
+- Turborepo
+- TypeScript Project References
+
+---
+
+# Repository Structure
+
+```text
+Chess.io/
+
+apps/
+├── api-service/          REST API
+├── ws-service/           WebSocket Gateway
+└── web-client/           React Frontend
+
+packages/
+└── shared-types/         Shared request/response & websocket types
 ```
-Server/
-	package.json
-	tsconfig.json
-	src/
-		index.ts                # Express app + WebSocket server, route wiring
-		database.ts             # Mongoose connection
-		GameFiles/
-			Game.ts               # Orchestrates a chess match between two sockets
-			Manager.ts            # Matches users and routes socket messages to a Game
-			Messages.ts           # String constants for WS message types
-			Worker.ts             # Worker thread entrypoint for move validation
-			Types/
-				GameTypes.ts        # Shared types for game and players
-				WorkerTypes.ts      # Messages exchanged with the worker
-			utils/
-				AxiosConfig.ts      # Axios instance that calls REST endpoints
-		REST/
-			routes/               # Express routers (auth, user, game)
-			controllers/          # Handlers for the REST routes
-			models/               # Mongoose schemas (user, game, move)
-			types/                # API request/response TypeScript types
-			utils/mailConfig.ts   # Nodemailer transport + email templates
+
+---
+
+# Architecture
+
+```text
+                 React Client
+                       │
+         ┌─────────────┴─────────────┐
+         │                           │
+         ▼                           ▼
+ REST API (Express)          WebSocket Gateway
+         │                           │
+         └─────────────┬─────────────┘
+                       │
+                 MongoDB Database
 ```
 
+### API Service
 
-## Environment variables
+Responsible for:
 
-Create `Server/.env` with:
+- Authentication
+- User profiles
+- Game persistence
+- Move persistence
+- Match history
 
-- `MONGODB_URL` — MongoDB connection string
-- `CLIENT_URL` — exact origin of the frontend (e.g., `http://localhost:5173` or deployed URL) used by CORS
-- `API_URL` — base URL that the game logic (server-side Axios) uses to call REST endpoints, typically `http://localhost:3000/api` in local dev
-- `MAILER_AUTH_USER` — Gmail address used by Nodemailer
-- `MAILER_AUTH_PASS` — Gmail app password (use an App Password; plain passwords are not supported on most accounts)
+### WebSocket Service
 
-Example `.env` (development):
+Responsible for:
 
+- Matchmaking
+- Live gameplay
+- Move synchronization
+- Game state management
+- Real-time signaling
+
+### Shared Types
+
+A dedicated package contains:
+
+- API request types
+- API response types
+- WebSocket message types
+
+This guarantees type safety across every application in the monorepo.
+
+---
+
+# Game Flow
+
+1. Two players connect to the WebSocket server.
+2. The matchmaking service pairs waiting players.
+3. A new game is created through the REST API.
+4. Players exchange moves over WebSockets.
+5. Every move is validated on the server.
+6. Valid moves are persisted to MongoDB.
+7. Opponents receive updates instantly.
+8. When the game finishes, the result is stored and both clients are notified.
+
+---
+
+# Project Structure
+
+```text
+apps/
+
+api-service/
+├── controllers/
+├── models/
+├── repositories/
+├── routes/
+├── middleware/
+└── server.ts
+
+ws-service/
+├── core/
+├── services/
+├── repositories/
+├── websocket/
+└── server.ts
+
+web-client/
+├── components/
+├── pages/
+├── hooks/
+├── services/
+└── utils/
+
+packages/
+
+shared-types/
+└── src/
 ```
-MONGODB_URL=mongodb://127.0.0.1:27017/chessio
-CLIENT_URL=http://localhost:5173
+
+---
+
+# Environment Variables
+
+## API Service
+
+```env
+PORT=3000
+MONGODB_URL=
+CLIENT_URL=
+JWTSECRET_KEY=
+MAILER_AUTH_USER=
+MAILER_AUTH_PASS=
+NODE_ENV=
+ACCESS_TOKEN_EXPIRY=1h
+REFRESH_TOKEN_EXPIRY=1d
+```
+
+## WebSocket Service
+
+```env
+PORT=8080
 API_URL=http://localhost:3000/api
-MAILER_AUTH_USER=your.email@gmail.com
-MAILER_AUTH_PASS=your-app-password
 ```
 
+## Web Client
 
-## Running locally
-
-1) Install dependencies and start the server
-
-```
-cd Server
-npm install
-npm run dev
+```env
+VITE_OAUTH_CLIENT_ID=
+VITE_OAUTH_CLIENT_SECRET=
+VITE_API_URL=http://localhost:3000/api
+VITE_SOCKET_URL=ws://localhost:8080
 ```
 
-- The script compiles TypeScript to `dist/` and runs `node dist/index.js`
-- HTTP and WebSocket servers listen on port `3000`
+---
 
-2) Run the client (optional, for a full local experience)
+# Running Locally
 
+Clone the repository
+
+```bash
+git clone https://github.com/<username>/Chess.io.git
+
+cd Chess.io
 ```
-cd Client
-npm install
-npm run dev
+
+Install dependencies
+
+```bash
+pnpm install
 ```
 
-Set `VITE_API_URL` in the client to match the server if needed, and ensure `CLIENT_URL` in the server `.env` matches the client dev origin.
+Run every application
 
+```bash
+pnpm dev
+```
 
-## REST API
+Or run individual services
 
-Base URL: `${API_URL}` (e.g., `http://localhost:3000/api`)
+```bash
+pnpm --filter api-service dev
 
-Auth
-- POST `/auth/login`
-	- Body: `{ username: string, email: string, photo: string }`
-	- Effect: creates the user if not present; sends a welcome email
-	- Response: `{ success: boolean, message: string }`
+pnpm --filter ws-service dev
 
-User
-- POST `/user/profile`
-	- Body: `{ email: string }`
-	- Response: `{ success, message, data?: { username, photo, rating, gamesPlayed, gamesWon, games: [...]} }`
+pnpm --filter web-client dev
+```
 
-- GET `/user/game/:id`
-	- Response: `{ success, message, data?: { id, player1, player2, moves: [{from,to,promotion}], winner, reason } }`
+---
 
-Game
-- POST `/game/create`
-	- Body: `{ player1: string, player2: string }` (usernames)
-	- Response: `{ success, message, gameId?: string }`
+# Build
 
-- POST `/game/move`
-	- Body: `{ from: string, to: string, promotion: string, gameId: string }`
-	- Response: `{ success, message }`
+Build every workspace
 
-- POST `/game/over`
-	- Body: `{ gameId: string, email: string, reason: string }` (email identifies the winner)
-	- Response: `{ success, message }`
+```bash
+pnpm build
+```
 
-Notes
-- Unknown routes return `404` JSON: `{ success: false, message: "404 Route not found" }`
-- CORS: Only `CLIENT_URL` is allowed, credentials enabled, headers `Content-Type, Authorization`
+Build a single application
 
+```bash
+pnpm --filter api-service build
+```
 
-## WebSocket protocol
+---
 
-Connect to: `ws://<server-host>:3000`
+# Monorepo
 
-Client → Server messages
-- `init_game`
-	- Shape: `{ type: "init_game", username: string, email: string }`
-	- Behavior: first user is kept pending; when a second user connects and also sends `init_game`, a `Game` is created
+The repository uses **pnpm Workspaces** and **Turborepo**.
 
-- `move`
-	- Shape: `{ type: "move", move: { from: string, to: string, promotion?: string } }`
-	- Behavior: forwarded to the worker for validation; if valid, persisted and relayed to the opponent
+Benefits include:
 
-- `player_resign`
-	- Shape: `{ type: "player_resign" }`
-	- Behavior: marks game over; opponent wins; persisted and both clients notified
+- Shared dependencies
+- Incremental builds
+- Cached builds
+- Shared TypeScript packages
+- Consistent tooling across every application
 
-- `web_stream`
-	- Shape: `{ type: "web_stream", data: any }`
-	- Behavior: relayed to the opponent as-is (used as lightweight signaling/data channel)
+---
 
-Server → Client messages
-- `init_game`
-	- Payload: `{ color: "w" | "b", oppName: string }`
+# Current Capabilities
 
-- `move`
-	- Payload: `{ from, to, promotion? }` — opponent’s accepted move
+- User authentication
+- Player matchmaking
+- Real-time gameplay
+- Move validation
+- Persistent game storage
+- User profiles
+- Match history
+- Game replay
+- Shared type-safe API contracts
 
-- `invalid_move`
-	- Payload: `{ reason: string }`
+---
 
-- `game_over`
-	- Payload: `{ winner: "w" | "b", reason: string }`
+# Planned Improvements
 
+- Chess clocks
+- Spectator mode
+- Draw offers
+- ELO rating system
+- Reconnection support
+- Matchmaking queues
+- Friend system
+- Puzzle mode
+- Tournament support
+- Redis for distributed matchmaking
+- Docker deployment
+- Kubernetes deployment
+- CI/CD pipeline
+- Horizontal WebSocket scaling
 
-## Data models
+---
 
-User (`REST/models/user.ts`)
-- `username: string`
-- `email: string` (unique)
-- `picture: string`
-- `friends: ObjectId[]`
-- `games: ObjectId[]` (refs Game)
-- `gamesWon: number` (default 0)
-- `rating: number` (default 500)
+# Learning Objectives
 
-Game (`REST/models/game.ts`)
-- `player1: ObjectId` (ref User)
-- `player2: ObjectId` (ref User)
-- `moves: ObjectId[]` (refs Move)
-- `isGameOver: boolean` (default false)
-- `winner: ObjectId` (ref User)
-- `reason: string`
+This project explores:
 
-Move (`REST/models/move.ts`)
-- `from: string`
-- `to: string`
-- `promotion: string` (optional)
+- Real-time distributed systems
+- WebSocket architecture
+- Service-oriented backend design
+- Type-safe APIs
+- Monorepo development
+- Backend scalability
+- Production-ready TypeScript
+- Database modeling
+- Event-driven programming
 
+---
 
-## How a game flows
+# License
 
-1) Two clients connect via WebSocket and each sends `init_game` `{ username, email }`.
-2) `GameManager` pairs the first waiting user with the next; a `Game` is constructed.
-3) `Game`:
-	 - Assigns colors (first joined gets white), notifies each client with `init_game` payload.
-	 - Creates a DB game via REST `POST /game/create`.
-	 - On each candidate `move`, posts to the Worker for validation using `chess.js`.
-	 - If valid: persists via `POST /game/move` and relays to opponent.
-	 - After each move, checks if the game is over (`checkmate`, `stalemate`, or `draw`).
-	 - On finish or `player_resign`, persists via `POST /game/over`, notifies both clients with `game_over`, and terminates the worker.
-
-
-## Development notes
-
-- Build output goes to `Server/dist`. The worker is loaded via `path.join(__dirname, "Worker.js")`, so ensure `Worker.ts` compiles to `dist/GameFiles/Worker.js`.
-- Set `API_URL` so the server’s internal Axios client can call its own REST API (e.g., `http://localhost:3000/api`).
-- For Gmail: use an App Password with `MAILER_AUTH_PASS` when 2FA is enabled.
-- Authentication: `POST /auth/login` currently creates/logs-in users and sends a welcome email. JWT scaffolding is present but not active; you can add token issuance and middleware later if needed.
-
-
-## Scripts (Server)
-
-`npm run dev`
-- Compiles TypeScript (`tsc -b`) and runs `node ./dist/index.js`
+This project is licensed under the MIT License.
