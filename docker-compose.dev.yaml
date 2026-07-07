@@ -1,0 +1,42 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+
+    command: pnpm dev
+
+    ports:
+      - "3000:3000"
+      - "5173:5173"
+      - "8080:8080"
+
+    volumes:
+      - ./apps:/app/apps
+      - ./packages:/app/packages
+
+    env_file:
+      - ./apps/api-service/.env.dev
+      - ./apps/web-client/.env.dev
+      - ./apps/ws-service/.env.dev
+    depends_on:
+      - mongo
+      - redis
+
+  mongo:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  mongo-data:
+  redis-data:

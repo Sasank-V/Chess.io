@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const axiosC = axios.create({
-  baseURL: process.env.API_URL,
+  baseURL: process.env.API_SERVICE_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });

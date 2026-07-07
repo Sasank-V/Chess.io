@@ -1,0 +1,22 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+RUN corepack enable
+
+COPY package.json .
+COPY pnpm-lock.yaml .
+COPY pnpm-workspace.yaml .
+COPY turbo.json .
+
+COPY apps/api-service/package.json apps/api-service/
+COPY apps/ws-service/package.json apps/ws-service/
+COPY apps/web-client/package.json apps/web-client/
+
+COPY packages/shared-types/package.json packages/shared-types/
+
+RUN pnpm install
+
+COPY . .
+
+CMD ["pnpm", "turbo", "dev"]

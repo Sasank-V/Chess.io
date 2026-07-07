@@ -1,10 +1,10 @@
 # Chess.io
 
-A production-oriented real-time multiplayer chess platform built with modern TypeScript technologies.
+> A production-oriented real-time multiplayer chess platform built using a service-oriented architecture with React, Node.js, WebSockets, MongoDB, pnpm Workspaces, and Turborepo.
 
-Chess.io demonstrates how to build a scalable real-time application by separating concerns into independent services for the frontend, REST API, WebSocket gateway, and shared packages. The project focuses on clean architecture, strong typing, low-latency communication, and maintainability.
+**Status:** Active Development 🚧
 
----
+The project is currently migrating from a monolithic architecture to a modular multi-service architecture. Core gameplay, authentication, persistence, and matchmaking are functional, while deployment and infrastructure improvements are in progress.
 
 # Features
 
@@ -17,6 +17,20 @@ Chess.io demonstrates how to build a scalable real-time application by separatin
 - Shared TypeScript types across frontend and backend
 - Monorepo powered by pnpm Workspaces and Turborepo
 - Modular service-oriented backend architecture
+
+## Deployment Status
+
+Frontend: Planned
+
+REST API: Runs locally
+
+WebSocket Gateway: Runs locally
+
+Database: MongoDB
+
+Containerization: In Progress
+
+Kubernetes: Planned
 
 ---
 
@@ -63,17 +77,42 @@ packages/
 
 # Architecture
 
+## Why this Architecture?
+
+The project originally began as a monolithic application.
+
+As the feature set grew, it became difficult to independently develop, test, and scale backend components. The project was therefore migrated to a service-oriented architecture where:
+
+- REST APIs handle persistence
+- WebSocket Gateway manages real-time gameplay
+- Shared packages eliminate duplicate types
+- Services can evolve independently
+- Future horizontal scaling becomes possible
+
 ```text
-                 React Client
-                       │
-         ┌─────────────┴─────────────┐
-         │                           │
-         ▼                           ▼
- REST API (Express)          WebSocket Gateway
-         │                           │
-         └─────────────┬─────────────┘
-                       │
-                 MongoDB Database
+                 +----------------------+
+                 |      React Client    |
+                 +----------+-----------+
+                            |
+           +----------------+----------------+
+           |                                 |
+           ▼                                 ▼
++--------------------+          +----------------------+
+|    REST API        |          |   WebSocket Gateway  |
+| Authentication     |          | Matchmaking          |
+| Profiles           |          | Live Gameplay        |
+| Persistence        |          | Move Validation      |
++---------+----------+          +----------+-----------+
+          |                                |
+          +---------------+----------------+
+                          |
+                          ▼
+                  +---------------+
+                  |   MongoDB     |
+                  +---------------+
+
+                 Shared Packages
+          (Types • Utilities • Contracts)
 ```
 
 ### API Service
@@ -118,6 +157,18 @@ This guarantees type safety across every application in the monorepo.
 6. Valid moves are persisted to MongoDB.
 7. Opponents receive updates instantly.
 8. When the game finishes, the result is stored and both clients are notified.
+
+---
+
+## Key Engineering Decisions
+
+- Server-authoritative game engine
+- Stateless REST APIs
+- Stateful WebSocket gateway
+- Shared TypeScript contracts
+- Repository pattern
+- Modular service boundaries
+- Strong runtime validation
 
 ---
 
@@ -268,22 +319,31 @@ Benefits include:
 
 ---
 
-# Planned Improvements
+## Roadmap
+
+### Gameplay
 
 - Chess clocks
 - Spectator mode
 - Draw offers
-- ELO rating system
-- Reconnection support
-- Matchmaking queues
-- Friend system
-- Puzzle mode
-- Tournament support
-- Redis for distributed matchmaking
-- Docker deployment
-- Kubernetes deployment
-- CI/CD pipeline
+
+### Social
+
+- Friends
+- Tournament mode
+- ELO Rating
+
+### Scalability
+
+- Redis matchmaking
 - Horizontal WebSocket scaling
+- Kubernetes deployment
+
+### Reliability
+
+- Prometheus
+- Grafana
+- CI/CD
 
 ---
 
