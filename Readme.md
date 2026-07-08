@@ -2,8 +2,6 @@
 
 > A production-oriented real-time multiplayer chess platform built using a service-oriented architecture, event-driven persistence, React, Node.js, WebSockets, Redis Streams, MongoDB, pnpm Workspaces, and Turborepo.
 
-**Status:** Active Development 🚧
-
 Chess.io is designed as a modular backend composed of independent services communicating through well-defined APIs and asynchronous events. The architecture separates real-time gameplay from database persistence, making the system easier to extend, maintain, and scale.
 
 ---
@@ -116,6 +114,10 @@ Responsible for:
                  Shared Packages
       (API Contracts • WebSocket Messages • Game Events)
 ```
+
+## WebRTC Overview
+
+![webRTC](./images/webRTC.png)
 
 ---
 
@@ -260,6 +262,54 @@ shared-types/
 - Service-oriented architecture
 
 ---
+
+# Monitoring and Observability
+
+Chess.io includes Prometheus and Grafana for local observability and dashboarding.
+
+## Metrics Endpoints
+
+Each backend service exposes Prometheus metrics at `/metrics`:
+
+- API Service: `http://localhost:3000/metrics`
+- WebSocket Service: `http://localhost:8080/metrics`
+- Persistence Service: `http://localhost:4000/metrics`
+
+These metrics are powered by `prom-client` and include default Node.js process metrics plus service-specific counters and histograms for authentication, HTTP traffic, Redis activity, WebSocket traffic, and persistence operations.
+
+## Prometheus
+
+Prometheus is configured in [`monitoring/prometheus.yml`](monitoring/prometheus.yml) and scrapes the backend services every 5 seconds.
+
+The Docker Compose network targets are:
+
+- `dev:3000` for the API Service
+- `dev:8080` for the WebSocket Service
+- `dev:4000` for the Persistence Service
+
+## Grafana
+
+Grafana is available in the compose stack for dashboards and visualization.
+
+- Grafana UI: `http://localhost:3001`
+- Prometheus UI: `http://localhost:9090`
+
+## Grafana Dashboard Screenshots
+
+![grafana-1](./images/image.png)
+![grafana-api](./images/image-1.png)
+![grafana-ws](./images/image-2.png)
+![grafana-persistence](./images/image-3.png)
+
+Use Grafana to create dashboards from the Prometheus data source and track request throughput, Redis usage, WebSocket activity, and persistence latency over time.
+
+## Web Client Screenshots
+
+![web-1](./images/web-1.png)
+![web-2](./images/web-2.png)
+![web-3](./images/web-3.png)
+![web-4](./images/web-4.png)
+![web-5](./images/web-5.png)
 
 # Environment Variables
 
