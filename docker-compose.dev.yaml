@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.dev
 
-    command: pnpm dev
+    command: pnpm exec turbo run dev --env-mode=loose
 
     ports:
       - "3000:3000"
@@ -19,6 +19,8 @@ services:
       - ./apps/api-service/.env.dev
       - ./apps/web-client/.env.dev
       - ./apps/ws-service/.env.dev
+      - ./apps/persistence-service/.env.dev
+
     depends_on:
       - mongo
       - redis

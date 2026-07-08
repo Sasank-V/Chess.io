@@ -19,4 +19,4 @@ RUN pnpm install
 
 COPY . .
 
-CMD ["pnpm", "turbo", "dev"]
+CMD ["pnpm", "exec", "turbo", "run", "dev", "--env-mode=loose"]

@@ -1,7 +1,5 @@
 import nodemailer, { Transporter } from "nodemailer";
 import { MailOptions } from "nodemailer/lib/sendmail-transport";
-import dotenv from "dotenv";
-dotenv.config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -14,7 +12,10 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const getOTPMailOptions = (otp: string, recvEmail: string): MailOptions => {
+export const getOTPMailOptions = (
+  otp: string,
+  recvEmail: string,
+): MailOptions => {
   return {
     from: {
       name: "Chess.io Password Assistance",
@@ -48,7 +49,6 @@ export const getOTPMailOptions = (otp: string, recvEmail: string): MailOptions =
     `,
   };
 };
-
 
 export const getWelcomeMailOptions = (username: string, recvEmail: string) => {
   return {
@@ -86,15 +86,14 @@ export const getWelcomeMailOptions = (username: string, recvEmail: string) => {
   };
 };
 
-export const sendMail = async (mailOptions:MailOptions) => {
-    try{
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Mail Sent");
-    }catch(error){
-        console.log("Error while sending email: ", error);
-    }
+export const sendMail = async (mailOptions: MailOptions) => {
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Mail Sent");
+  } catch (error) {
+    console.log("Error while sending email: ", error);
+  }
 };
 
 // const options = getOTPMailOptions("123456","sasank.v.16@gmail.com");
 // sendMail(options);
-

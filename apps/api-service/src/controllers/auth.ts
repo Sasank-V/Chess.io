@@ -14,6 +14,7 @@ export const loginHandler: RequestHandler<
   AuthRequestBody
 > = async (req, res) => {
   try {
+    console.log("Request Body:", req.body);
     const { username, email, photo } = req.body;
     let user = (await User.findOne({ email: email })) as IUser | null;
     if (!user) {

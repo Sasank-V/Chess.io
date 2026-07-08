@@ -1,25 +1,34 @@
 import { WebSocketServer } from "ws";
 import { GameSessionService } from "./services/GameSessionService";
-import dotenv from "dotenv";
+import { connectRedis } from "./config/Redis";
+import { logger } from "./config/Logger";
 
-dotenv.config();
-const wss = new WebSocketServer({ port: 8080 });
-const gameSessionService = new GameSessionService();
+async function bootstrap() {
+  await connectRedis();
 
-wss.on("connection", function connection(ws) {
-  console.log("User Connected");
-  gameSessionService.addUser(ws);
+  const wss = new WebSocketServer({ port: 8080 });
+  const gameSessionService = new GameSessionService();
 
-  // Handle client disconnection
-  ws.on("close", () => {
-    console.log("User Disconnected");
-    gameSessionService.removeUser(ws);
+  wss.on("connection", (ws) => {
+    logger.info("User Connected");
+
+    gameSessionService.addUser(ws);
+
+    ws.on("close", () => {
+      logger.info("User Disconnected");
+      gameSessionService.removeUser(ws);
+    });
+
+    ws.on("error", (error) => {
+      logger.error("WebSocket error:" + error);
+      gameSessionService.removeUser(ws);
+    });
   });
 
-  // Handle errors
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
-    gameSessionService.removeUser(ws);
-  });
+  logger.info("WebSocket server listening on ws://localhost:8080");
+}
+
+bootstrap().catch((err) => {
+  logger.error("Failed to start WebSocket server:", err);
+  process.exit(1);
 });
-console.log("WebSocket server listening on ws://localhost:8080");

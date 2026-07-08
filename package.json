@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --env-mode=loose",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test"

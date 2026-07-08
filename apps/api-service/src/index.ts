@@ -1,6 +1,5 @@
 import cors from "cors";
 import express from "express";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { connectToDB } from "./database.js";
 import http from "http";
@@ -15,15 +14,18 @@ const app = express();
 const server = http.createServer(app);
 
 connectToDB();
-dotenv.config();
-
 const allowedOrigins = process.env.CLIENT_URLS?.split(",") ?? [];
 app.use(
   cors({
     origin(origin, callback) {
       // Allow requests without an Origin header (Postman, curl, server-to-server)
       if (!origin) return callback(null, true);
-
+      console.log(
+        "Request Origin:",
+        origin,
+        "Allowed Origins:",
+        allowedOrigins,
+      );
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }

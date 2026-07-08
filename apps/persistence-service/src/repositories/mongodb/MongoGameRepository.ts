@@ -1,20 +1,20 @@
-import { Move, Player } from "@/types/GameTypes";
-import { axiosC } from "@/utils/AxiosConfig";
 import {
   AddMoveResponse,
   CreateGameResponse,
   GameOverResponse,
+  Player,
+  Move,
 } from "@chess.io/shared-types";
+import { IGameRepository } from "../interfaces/index.js";
+import { axiosC } from "../../config/AxiosConfig.js";
 
-class GameRepository {
-  async addGame(player1: Player, player2: Player): Promise<string> {
+export class MongoGameRepository implements IGameRepository {
+  async addGame(player1Email: string, player2Email: string): Promise<string> {
     const response = await axiosC.post<CreateGameResponse>("/game/create", {
-      player1: player1.username,
-      player2: player2.username,
+      player1: player1Email,
+      player2: player2Email,
     });
-
     const res = response.data;
-
     if (!res.success || !res.gameId) {
       throw new Error(res.message || "Failed to create game");
     }
@@ -48,5 +48,3 @@ class GameRepository {
     }
   }
 }
-
-export default GameRepository;

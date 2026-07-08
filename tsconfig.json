@@ -12,6 +12,9 @@
     },
     {
       "path": "./apps/web-client"
+    },
+    {
+      "path": "./apps/persistence-service"
     }
   ]
 }
