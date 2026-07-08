@@ -11,6 +11,7 @@ import { GameMessenger } from "@/websocket/GameMessenger";
 import { RedisGameStateRepository } from "@/repositories/redis/RedisGameRepository";
 import GameService from "./GameService";
 import { logger } from "@/config/Logger";
+import { activeGames, messagesReceived } from "@/metrics/websocket";
 
 export class GameSessionService {
   private readonly activeGames = new Map<string, GameService>();
@@ -50,21 +51,25 @@ export class GameSessionService {
 
         switch (message.type) {
           case INIT_GAME: {
+            messagesReceived.inc({ type: INIT_GAME });
             await this.handleInitGame(socket, message);
             break;
           }
 
           case MOVE: {
+            messagesReceived.inc({ type: MOVE });
             await this.handleMove(socket, message.move);
             break;
           }
 
           case PLAYER_RESIGN: {
+            messagesReceived.inc({ type: PLAYER_RESIGN });
             await this.handleResign(socket);
             break;
           }
 
           case WEB_STREAM: {
+            messagesReceived.inc({ type: WEB_STREAM });
             this.handleWebStream(socket, message.data);
             break;
           }
@@ -82,6 +87,7 @@ export class GameSessionService {
       this.pendingUser &&
       this.pendingUser.socket.readyState === WebSocket.OPEN
     ) {
+      activeGames.inc();
       const game = new GameService(
         this.pendingUser,
         {
@@ -124,7 +130,7 @@ export class GameSessionService {
 
     const game = this.activeGames.get(gameId);
     if (!game) return;
-
+    activeGames.dec();
     await game.handlePlayerResign(socket);
     this.activeGames.delete(gameId);
   }

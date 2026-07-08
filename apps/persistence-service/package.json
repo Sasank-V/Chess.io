@@ -16,6 +16,7 @@
     "@chess.io/shared-types": "workspace:*",
     "axios": "^1.18.1",
     "dotenv": "^17.4.2",
+    "prom-client": "^15.1.3",
     "redis": "^6.1.0"
   },
   "devDependencies": {

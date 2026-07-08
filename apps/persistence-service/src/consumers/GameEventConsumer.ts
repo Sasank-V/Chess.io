@@ -1,6 +1,13 @@
 import { GameEvent } from "@chess.io/shared-types";
+
 import PersistenceService from "../services/PersistenceService.js";
 import { redisClient } from "../config/Redis.js";
+
+import {
+  eventsConsumed,
+  eventsByType,
+  failedEvents,
+} from "../metrics/consumer.js";
 
 export default class GameEventConsumer {
   private readonly STREAM = "mq:game-events";
@@ -32,8 +39,15 @@ export default class GameEventConsumer {
           try {
             const event = JSON.parse(message.message.payload) as GameEvent;
 
+            eventsConsumed.inc();
+
+            eventsByType.inc({
+              type: event.type,
+            });
+
             await this.persistence.handle(event);
           } catch (err) {
+            failedEvents.inc();
             console.error("Failed to process event", err);
           }
         }

@@ -1,13 +1,21 @@
 import { WebSocket } from "ws";
 import { Chess } from "chess.js";
+import { randomUUID } from "crypto";
 import { Move, Player, GameOverInfo, Side } from "../types/GameTypes";
+import {
+  invalidMoves,
+  movesValidated,
+  moveValidationLatency,
+} from "@/metrics/gameplay";
 
 export class Game {
+  public readonly gameId: string;
   public player1: Player;
   public player2: Player;
   private board: Chess | null;
 
   constructor(player1: Player, player2: Player) {
+    this.gameId = randomUUID();
     this.player1 = player1;
     this.player2 = player2;
     this.board = new Chess();
@@ -24,12 +32,23 @@ export class Game {
   }
 
   validateMove(move: Move): boolean {
+    const end = moveValidationLatency.startTimer();
+
     try {
-      if (this.board == null) return false;
+      if (this.board == null) {
+        invalidMoves.inc();
+        return false;
+      }
+
       this.board.move(move);
+
+      movesValidated.inc();
       return true;
     } catch (error) {
+      invalidMoves.inc();
       return false;
+    } finally {
+      end();
     }
   }
 

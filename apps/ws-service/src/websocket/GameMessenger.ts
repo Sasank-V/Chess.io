@@ -1,3 +1,4 @@
+import { messagesSent } from "@/metrics/websocket";
 import { Move, Player, Side } from "@/types/GameTypes";
 import {
   INIT_GAME,
@@ -9,6 +10,7 @@ import {
 
 export class GameMessenger {
   sendInit(player: Player, opponent: Player) {
+    messagesSent.inc({ type: INIT_GAME });
     player.socket.send(
       JSON.stringify({
         type: INIT_GAME,
@@ -29,6 +31,7 @@ export class GameMessenger {
     );
   }
   sendMove(player: Player, move: Move) {
+    messagesSent.inc({ type: MOVE });
     player.socket.send(
       JSON.stringify({
         type: MOVE,
@@ -37,6 +40,7 @@ export class GameMessenger {
     );
   }
   sendInvalidMove(player: Player) {
+    messagesSent.inc({ type: INVALID_MOVE });
     player.socket.send(
       JSON.stringify({
         type: INVALID_MOVE,
@@ -53,6 +57,7 @@ export class GameMessenger {
     p1_reason: string,
     p2_reason: string,
   ) {
+    messagesSent.inc({ type: GAME_OVER });
     p1.socket.send(
       JSON.stringify({
         type: GAME_OVER,
@@ -73,6 +78,7 @@ export class GameMessenger {
     );
   }
   forwardStream(player: Player, data: any) {
+    messagesSent.inc({ type: WEB_STREAM });
     player.socket.send(
       JSON.stringify({
         type: WEB_STREAM,

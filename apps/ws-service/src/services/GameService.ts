@@ -1,4 +1,5 @@
 import { Game } from "@/core/Game";
+import { activeGames } from "@/metrics/websocket";
 import { publishGameEvent } from "@/queue/GameEventQueue";
 import { RedisGameStateRepository } from "@/repositories/redis/RedisGameRepository";
 import { Move, Player, Side } from "@/types/GameTypes";
@@ -39,12 +40,9 @@ class GameService {
   private getSides(socket: WebSocket): [Side, Side] {
     return socket === this.game.player1.socket ? ["w", "b"] : ["b", "w"];
   }
-  private generateGameId(): string {
-    return `${this.game.player1.email}-${this.game.player2.email}-${Date.now()}`;
-  }
   async initializeGame(): Promise<string> {
     if (this.isGameOver) return "";
-    this.gameId = this.generateGameId();
+    this.gameId = this.game.gameId;
     await this.repository.createGame(this.gameId);
     await publishGameEvent({
       type: "CREATE_GAME",
@@ -96,6 +94,7 @@ class GameService {
         result.reason,
         result.reason,
       );
+      activeGames.dec();
       this.isGameOver = true;
     }
   }

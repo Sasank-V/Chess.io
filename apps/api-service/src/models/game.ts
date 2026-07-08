@@ -2,8 +2,8 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 import { IUser } from "./user";
 import { IMove } from "./move";
 
-export interface IGame extends Document {
-  _id: mongoose.Types.ObjectId;
+export interface IGame {
+  _id: string;
   player1: mongoose.Types.ObjectId | IUser;
   player2: mongoose.Types.ObjectId | IUser;
   moves: mongoose.Types.ObjectId[] | IMove[];
@@ -13,6 +13,10 @@ export interface IGame extends Document {
 }
 
 const gameSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true,
+  },
   player1: {
     type: Schema.Types.ObjectId,
     ref: "User",

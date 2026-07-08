@@ -1,6 +1,7 @@
 export type CreateGameRequest = {
   player1: string;
   player2: string;
+  gameId: string;
 };
 
 export type CreateGameResponse = {

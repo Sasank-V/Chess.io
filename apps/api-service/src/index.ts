@@ -7,14 +7,20 @@ import http from "http";
 import { default as authRouter } from "./routes/auth";
 import { default as userRouter } from "./routes/user";
 import { default as gameRouter } from "./routes/game";
+import { default as monitoringRouter } from "./routes/monitoring";
+import { prometheusMiddleware } from "./middleware/prometheus.js";
+
 // import { verifyJWT } from './REST/middleware/auth';
 
 const app = express();
-
 const server = http.createServer(app);
 
 connectToDB();
+
+const PORT = Number(process.env.PORT) || 3000;
 const allowedOrigins = process.env.CLIENT_URLS?.split(",") ?? [];
+
+app.use(prometheusMiddleware);
 app.use(
   cors({
     origin(origin, callback) {
@@ -44,6 +50,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/game", gameRouter);
+app.use(monitoringRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, I am groot !");
@@ -56,6 +63,6 @@ app.use("*", (req, res) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log("Express Server is listening on port 3000");
+server.listen(PORT, () => {
+  console.log(`API Service listening on port ${PORT}`);
 });

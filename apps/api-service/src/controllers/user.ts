@@ -1,37 +1,17 @@
 import { RequestHandler } from "express";
 import { GetUserProfileResponse } from "@chess.io/shared-types";
+
 import User from "../models/user";
 import Game from "../models/game";
 import Move from "../models/move";
 
+import { profileRequests } from "../metrics/user";
+import { replayRequests } from "../metrics/game";
+import { monitorMongo } from "../metrics/helpers";
+
 export type GetUserRequestBody = {
   email: string;
 };
-
-// export const getAllUsersHandler:RequestHandler<{},GetAllResponse> = async (req,res)=>{
-//     try {
-//         const users = await User.find({});
-//         const data = users.map((user)=>({
-//             name:user.username,
-//             id:user._id.toString(),
-//             gamesPlayed: user.games.length,
-//             rating:user.rating,
-//         }));
-//         res.status(204).json({
-//             success:true,
-//             message:"All users sent",
-//             users:data,
-//         });
-//         return;
-//     } catch (error) {
-//         console.log("Server errror : While getting all users: ",error);
-//         res.status(500).json({
-//             success:false,
-//             message:"Server error while fetching all users",
-//             users:[],
-//         })
-//     }
-// }
 
 export const getUserProfileHandler: RequestHandler<
   {},
@@ -40,7 +20,11 @@ export const getUserProfileHandler: RequestHandler<
 > = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+
+    const user = await monitorMongo("users", "findOne", () =>
+      User.findOne({ email }),
+    );
+
     if (!user) {
       res.status(404).json({
         success: false,
@@ -48,13 +32,14 @@ export const getUserProfileHandler: RequestHandler<
       });
       return;
     }
-    // console.log(user);
-    const games_data = await Promise.all(
+
+    const gamesData = await Promise.all(
       user.games.map(async (id) => {
-        const game = await Game.findById(id);
-        const player1 = await User.findById(game?.player1);
-        const player2 = await User.findById(game?.player2);
-        if (!player1 || !player2 || !game)
+        const game = await monitorMongo("games", "findById", () =>
+          Game.findById(id),
+        );
+
+        if (!game) {
           return {
             white: "-",
             black: "-",
@@ -63,17 +48,40 @@ export const getUserProfileHandler: RequestHandler<
             won: false,
             id: "",
           };
-        // console.log(game.winner, user._id);
+        }
+
+        const player1 = await monitorMongo("users", "findById", () =>
+          User.findById(game.player1),
+        );
+
+        const player2 = await monitorMongo("users", "findById", () =>
+          User.findById(game.player2),
+        );
+
+        if (!player1 || !player2) {
+          return {
+            white: "-",
+            black: "-",
+            total_moves: 0,
+            reason: "-",
+            won: false,
+            id: "",
+          };
+        }
+
         return {
           white: player1.username,
           black: player2.username,
           total_moves: game.moves.length,
           won: game.winner ? game.winner.equals(user._id) : false,
-          reason: game.reason ?? "",
+          reason: game.reason.toString() ?? "",
           id: game._id.toString(),
         };
       }),
     );
+
+    profileRequests.inc();
+
     res.send({
       success: true,
       message: "User Profile Sent",
@@ -83,11 +91,12 @@ export const getUserProfileHandler: RequestHandler<
         photo: user.picture,
         rating: user.rating,
         username: user.username,
-        games: games_data,
+        games: gamesData,
       },
     });
   } catch (error) {
-    console.log("Server Error: While Getting user profile : ", error);
+    console.error("Server Error while getting user profile:", error);
+
     res.status(500).json({
       success: false,
       message: "Error while getting user profile",
@@ -96,7 +105,7 @@ export const getUserProfileHandler: RequestHandler<
 };
 
 export type GetGameInfoReponse = {
-  success: Boolean;
+  success: boolean;
   message: string;
   data?: {
     id: string;
@@ -111,6 +120,7 @@ export type GetGameInfoReponse = {
     reason: string;
   };
 };
+
 interface GetGameParams {
   id: string;
 }
@@ -122,7 +132,11 @@ export const getGameInfoHandler: RequestHandler<
 > = async (req, res) => {
   try {
     const { id } = req.params;
-    const game = await Game.findById(id);
+
+    const game = await monitorMongo("games", "findById", () =>
+      Game.findById(id),
+    );
+
     if (!game) {
       res.status(404).json({
         success: false,
@@ -130,18 +144,29 @@ export const getGameInfoHandler: RequestHandler<
       });
       return;
     }
-    const player1 = await User.findById(game.player1);
-    const player2 = await User.findById(game.player2);
+
+    const player1 = await monitorMongo("users", "findById", () =>
+      User.findById(game.player1),
+    );
+
+    const player2 = await monitorMongo("users", "findById", () =>
+      User.findById(game.player2),
+    );
+
     if (!player1 || !player2) {
       res.status(404).json({
         success: false,
-        message: "Players Not found",
+        message: "Players not found",
       });
       return;
     }
+
     const moves = await Promise.all(
       game.moves.map(async (mid) => {
-        const move = await Move.findById(mid);
+        const move = await monitorMongo("moves", "findById", () =>
+          Move.findById(mid),
+        );
+
         if (!move) {
           return {
             from: "",
@@ -149,6 +174,7 @@ export const getGameInfoHandler: RequestHandler<
             promotion: "",
           };
         }
+
         return {
           from: move.from,
           to: move.to,
@@ -156,11 +182,15 @@ export const getGameInfoHandler: RequestHandler<
         };
       }),
     );
+
     const winner = game.winner
-      ? game.winner.equals(game.player1._id)
+      ? game.winner.equals(game.player1.toString())
         ? player1.username
         : player2.username
       : "";
+
+    replayRequests.inc();
+
     res.send({
       success: true,
       message: "Game Details Sent",
@@ -174,7 +204,8 @@ export const getGameInfoHandler: RequestHandler<
       },
     });
   } catch (error) {
-    console.log("Server Error: While Getting game info : ", error);
+    console.error("Server Error while getting game info:", error);
+
     res.status(500).json({
       success: false,
       message: "Error while getting game info",
