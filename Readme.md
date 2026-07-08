@@ -1,36 +1,205 @@
 # Chess.io
 
-> A production-oriented real-time multiplayer chess platform built using a service-oriented architecture with React, Node.js, WebSockets, MongoDB, pnpm Workspaces, and Turborepo.
+> A production-oriented real-time multiplayer chess platform built using a service-oriented architecture, event-driven persistence, React, Node.js, WebSockets, Redis Streams, MongoDB, pnpm Workspaces, and Turborepo.
 
 **Status:** Active Development 🚧
 
-The project is currently migrating from a monolithic architecture to a modular multi-service architecture. Core gameplay, authentication, persistence, and matchmaking are functional, while deployment and infrastructure improvements are in progress.
+Chess.io is designed as a modular backend composed of independent services communicating through well-defined APIs and asynchronous events. The architecture separates real-time gameplay from database persistence, making the system easier to extend, maintain, and scale.
+
+---
 
 # Features
 
 - Real-time multiplayer chess using WebSockets
-- Server-side move validation using `chess.js`
-- Persistent game history stored in MongoDB
-- User authentication and profile management
+- Server-authoritative move validation using `chess.js`
+- Event-driven persistence with Redis Streams
+- Asynchronous game persistence service
+- User authentication with Google OAuth
+- Persistent game history and move storage
+- Matchmaking and game session management
 - Game replay support
 - Resignation and game-over handling
-- Shared TypeScript types across frontend and backend
+- Shared TypeScript contracts across all services
 - Monorepo powered by pnpm Workspaces and Turborepo
-- Modular service-oriented backend architecture
 
-## Deployment Status
+---
 
-Frontend: Planned
+# Current Architecture
 
-REST API: Runs locally
+## Services
 
-WebSocket Gateway: Runs locally
+### Web Client
 
-Database: MongoDB
+- React
+- Vite
+- Tailwind CSS
+- TypeScript
 
-Containerization: In Progress
+### API Service
 
-Kubernetes: Planned
+Responsible for:
+
+- Authentication
+- User management
+- Game retrieval
+- Match history
+- Profile APIs
+
+### WebSocket Service
+
+Responsible for:
+
+- Matchmaking
+- Live gameplay
+- Move validation
+- Session management
+- Publishing game events
+
+### Persistence Service
+
+Responsible for:
+
+- Consuming game events from Redis Streams
+- Persisting games and moves
+- Updating completed matches
+- Decoupling gameplay from database operations
+
+---
+
+# Architecture Overview
+
+```text
+                              +----------------------+
+                              |     React Client     |
+                              +----------+-----------+
+                                         |
+                     +-------------------+-------------------+
+                     |                                       |
+                     ▼                                       ▼
+          +----------------------+              +----------------------+
+          |     API Service      |              |    WebSocket Service |
+          |----------------------|              |----------------------|
+          | Google OAuth         |              | Matchmaking          |
+          | User Management      |              | Live Gameplay        |
+          | Game Persistence API |              | Move Validation      |
+          | Profile APIs         |              | Session Management   |
+          +----------+-----------+              | Publish Game Events  |
+                     ▲                          +----------+-----------+
+                     |                                     |
+                     |                                     |
+                     |                          XADD mq:game-events
+                     |                                     |
+                     |                                     ▼
+                     |                     +-------------------------------+
+                     |                     |         Redis Streams         |
+                     |                     |      mq:game-events           |
+                     |                     +---------------+---------------+
+                     |                                     |
+                     |                              XREAD BLOCK
+                     |                                     |
+                     |                                     ▼
+                     |                     +-------------------------------+
+                     |                     |     Persistence Service       |
+                     |                     |-------------------------------|
+                     |                     | Consume Game Events           |
+                     |                     | Transform Events              |
+                     |                     | Call API Service              |
+                     |                     +---------------+---------------+
+                     |                                     |
+                     +------------- HTTP REST -------------+
+                                           |
+                                           ▼
+                                   +---------------+
+                                   |   MongoDB     |
+                                   +---------------+
+
+                 Shared Packages
+      (API Contracts • WebSocket Messages • Game Events)
+```
+
+---
+
+# Event-Driven Persistence
+
+The WebSocket service is optimized exclusively for low-latency gameplay.
+
+Instead of writing directly to MongoDB, it publishes events to a Redis Stream.
+
+Examples of events include:
+
+- Game Created
+- Move Played
+- Game Finished
+
+The Persistence Service consumes these events independently and updates the database asynchronously.
+
+This architecture provides:
+
+- Loose coupling
+- Faster gameplay response
+- Independent scaling
+- Improved fault isolation
+- Easier integration of additional consumers (analytics, notifications, leaderboards, etc.)
+
+---
+
+# Repository Structure
+
+```text
+Chess.io/
+
+apps/
+├── api-service/
+├── persistence-service/
+├── web-client/
+└── ws-service/
+
+packages/
+└── shared-types/
+```
+
+---
+
+# Project Structure
+
+```text
+apps/
+
+api-service/
+├── controllers/
+├── middleware/
+├── models/
+├── routes/
+└── src/
+
+ws-service/
+├── core/
+├── queue/
+├── repositories/
+├── services/
+├── websocket/
+└── src/
+
+persistence-service/
+├── consumers/
+├── repositories/
+├── services/
+└── src/
+
+web-client/
+├── components/
+├── context/
+├── hooks/
+├── screens/
+└── src/
+
+packages/
+
+shared-types/
+├── api/
+├── events/
+└── websocket/
+```
 
 ---
 
@@ -51,7 +220,12 @@ Kubernetes: Planned
 - MongoDB
 - Mongoose
 
-## Shared Infrastructure
+## Messaging
+
+- Redis
+- Redis Streams
+
+## Monorepo
 
 - pnpm Workspaces
 - Turborepo
@@ -59,151 +233,31 @@ Kubernetes: Planned
 
 ---
 
-# Repository Structure
-
-```text
-Chess.io/
-
-apps/
-├── api-service/          REST API
-├── ws-service/           WebSocket Gateway
-└── web-client/           React Frontend
-
-packages/
-└── shared-types/         Shared request/response & websocket types
-```
-
----
-
-# Architecture
-
-## Why this Architecture?
-
-The project originally began as a monolithic application.
-
-As the feature set grew, it became difficult to independently develop, test, and scale backend components. The project was therefore migrated to a service-oriented architecture where:
-
-- REST APIs handle persistence
-- WebSocket Gateway manages real-time gameplay
-- Shared packages eliminate duplicate types
-- Services can evolve independently
-- Future horizontal scaling becomes possible
-
-```text
-                 +----------------------+
-                 |      React Client    |
-                 +----------+-----------+
-                            |
-           +----------------+----------------+
-           |                                 |
-           ▼                                 ▼
-+--------------------+          +----------------------+
-|    REST API        |          |   WebSocket Gateway  |
-| Authentication     |          | Matchmaking          |
-| Profiles           |          | Live Gameplay        |
-| Persistence        |          | Move Validation      |
-+---------+----------+          +----------+-----------+
-          |                                |
-          +---------------+----------------+
-                          |
-                          ▼
-                  +---------------+
-                  |   MongoDB     |
-                  +---------------+
-
-                 Shared Packages
-          (Types • Utilities • Contracts)
-```
-
-### API Service
-
-Responsible for:
-
-- Authentication
-- User profiles
-- Game persistence
-- Move persistence
-- Match history
-
-### WebSocket Service
-
-Responsible for:
-
-- Matchmaking
-- Live gameplay
-- Move synchronization
-- Game state management
-- Real-time signaling
-
-### Shared Types
-
-A dedicated package contains:
-
-- API request types
-- API response types
-- WebSocket message types
-
-This guarantees type safety across every application in the monorepo.
-
----
-
 # Game Flow
 
-1. Two players connect to the WebSocket server.
-2. The matchmaking service pairs waiting players.
-3. A new game is created through the REST API.
+1. Two players connect to the WebSocket service.
+2. Matchmaking pairs waiting players.
+3. A game session is created in memory.
 4. Players exchange moves over WebSockets.
-5. Every move is validated on the server.
-6. Valid moves are persisted to MongoDB.
-7. Opponents receive updates instantly.
-8. When the game finishes, the result is stored and both clients are notified.
+5. Every move is validated using `chess.js`.
+6. The WebSocket service publishes game events to Redis Streams.
+7. The Persistence Service consumes events asynchronously.
+8. MongoDB is updated with the latest game state.
+9. Opponents receive updates immediately without waiting for database writes.
 
 ---
 
-## Key Engineering Decisions
+# Engineering Decisions
 
 - Server-authoritative game engine
-- Stateless REST APIs
+- Event-driven persistence
+- Asynchronous database writes
+- Stateless REST API
 - Stateful WebSocket gateway
+- Redis Streams as an event queue
 - Shared TypeScript contracts
 - Repository pattern
-- Modular service boundaries
-- Strong runtime validation
-
----
-
-# Project Structure
-
-```text
-apps/
-
-api-service/
-├── controllers/
-├── models/
-├── repositories/
-├── routes/
-├── middleware/
-└── server.ts
-
-ws-service/
-├── core/
-├── services/
-├── repositories/
-├── websocket/
-└── server.ts
-
-web-client/
-├── components/
-├── pages/
-├── hooks/
-├── services/
-└── utils/
-
-packages/
-
-shared-types/
-└── src/
-```
+- Service-oriented architecture
 
 ---
 
@@ -223,20 +277,33 @@ ACCESS_TOKEN_EXPIRY=1h
 REFRESH_TOKEN_EXPIRY=1d
 ```
 
+---
+
 ## WebSocket Service
 
 ```env
 PORT=8080
-API_URL=http://localhost:3000/api
+API_SERVICE_URL=http://api-service:3000/api
+REDIS_URL=redis://redis:6379
 ```
+
+---
+
+## Persistence Service
+
+```env
+API_SERVICE_URL=http://api-service:3000/api
+REDIS_URL=redis://redis:6379
+```
+
+---
 
 ## Web Client
 
 ```env
+VITE_API_SERVICE_URL=http://localhost:3000/api
+VITE_WS_SERVICE_URL=ws://localhost:8080
 VITE_OAUTH_CLIENT_ID=
-VITE_OAUTH_CLIENT_SECRET=
-VITE_API_URL=http://localhost:3000/api
-VITE_SOCKET_URL=ws://localhost:8080
 ```
 
 ---
@@ -247,7 +314,6 @@ Clone the repository
 
 ```bash
 git clone https://github.com/<username>/Chess.io.git
-
 cd Chess.io
 ```
 
@@ -257,93 +323,94 @@ Install dependencies
 pnpm install
 ```
 
-Run every application
+Run all services
 
 ```bash
 pnpm dev
 ```
 
-Or run individual services
+Run an individual service
 
 ```bash
 pnpm --filter api-service dev
 
 pnpm --filter ws-service dev
 
+pnpm --filter persistence-service dev
+
 pnpm --filter web-client dev
 ```
 
 ---
 
-# Build
+# Docker
 
-Build every workspace
-
-```bash
-pnpm build
-```
-
-Build a single application
+Run the complete development environment
 
 ```bash
-pnpm --filter api-service build
+docker compose -f docker-compose.dev.yaml up --build
 ```
 
----
+This starts:
 
-# Monorepo
-
-The repository uses **pnpm Workspaces** and **Turborepo**.
-
-Benefits include:
-
-- Shared dependencies
-- Incremental builds
-- Cached builds
-- Shared TypeScript packages
-- Consistent tooling across every application
+- API Service
+- WebSocket Service
+- Persistence Service
+- MongoDB
+- Redis
+- Web Client
 
 ---
 
 # Current Capabilities
 
-- User authentication
-- Player matchmaking
-- Real-time gameplay
-- Move validation
-- Persistent game storage
+- Google OAuth authentication
+- Real-time multiplayer chess
+- Matchmaking
+- Server-side move validation
+- Event-driven persistence
+- Persistent game history
 - User profiles
-- Match history
 - Game replay
-- Shared type-safe API contracts
+- Shared TypeScript contracts
 
 ---
 
-## Roadmap
+# Roadmap
 
-### Gameplay
+## Gameplay
 
 - Chess clocks
-- Spectator mode
 - Draw offers
+- Spectator mode
 
-### Social
+## Competitive Features
 
+- ELO rating
 - Friends
-- Tournament mode
-- ELO Rating
+- Tournament support
+- Leaderboards
 
-### Scalability
+## Scalability
 
-- Redis matchmaking
+- Redis consumer groups
+- Multiple Persistence Service instances
 - Horizontal WebSocket scaling
 - Kubernetes deployment
 
-### Reliability
+## Observability
 
 - Prometheus
 - Grafana
+- Distributed logging
+- Metrics dashboard
+
+## Infrastructure
+
 - CI/CD
+- Health checks
+- Graceful shutdown
+- Service discovery
 
 ---
 
@@ -351,15 +418,16 @@ Benefits include:
 
 This project explores:
 
-- Real-time distributed systems
-- WebSocket architecture
-- Service-oriented backend design
-- Type-safe APIs
-- Monorepo development
+- Service-oriented backend architecture
+- Event-driven systems
+- Redis Streams
+- Real-time WebSocket applications
+- Distributed system design
 - Backend scalability
-- Production-ready TypeScript
-- Database modeling
-- Event-driven programming
+- Type-safe API contracts
+- Monorepo development
+- Production-oriented TypeScript
+- Docker-based local development
 
 ---
 
