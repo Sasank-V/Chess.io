@@ -4,6 +4,23 @@
 
 Chess.io is designed as a modular backend composed of independent services communicating through well-defined APIs and asynchronous events. The architecture separates real-time gameplay from database persistence, making the system easier to extend, maintain, and scale.
 
+
+## Web Client Screenshots
+
+![web-1](./images/web-1.png)
+![web-2](./images/web-2.png)
+![web-3](./images/web-3.png)
+![web-4](./images/web-4.png)
+![web-5](./images/web-5.png)
+
+
+## Grafana Dashboard Screenshots
+
+![grafana-1](./images/image.png)
+![grafana-api](./images/image-1.png)
+![grafana-ws](./images/image-2.png)
+![grafana-persistence](./images/image-3.png)
+
 ---
 
 # Features
@@ -294,22 +311,8 @@ Grafana is available in the compose stack for dashboards and visualization.
 - Grafana UI: `http://localhost:3001`
 - Prometheus UI: `http://localhost:9090`
 
-## Grafana Dashboard Screenshots
-
-![grafana-1](./images/image.png)
-![grafana-api](./images/image-1.png)
-![grafana-ws](./images/image-2.png)
-![grafana-persistence](./images/image-3.png)
-
 Use Grafana to create dashboards from the Prometheus data source and track request throughput, Redis usage, WebSocket activity, and persistence latency over time.
 
-## Web Client Screenshots
-
-![web-1](./images/web-1.png)
-![web-2](./images/web-2.png)
-![web-3](./images/web-3.png)
-![web-4](./images/web-4.png)
-![web-5](./images/web-5.png)
 
 # Environment Variables
 
